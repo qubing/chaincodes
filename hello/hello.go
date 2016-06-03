@@ -25,6 +25,27 @@ type Hello struct {
 	Greeting string `json:"greeting"`
 }
 
+func ToHello(name string, greeting string) (Hello, error) {
+	var hello Hello
+	name_json := "\"name\":\"" + name + "\", "
+	greeting_json := "\"greeting\":\"" + greeting + "\""
+	_json := "{" + name_json + greeting_json + "}"
+	fmt.Println(_json)
+	err := json.Unmarshal([]byte(_json), &hello)
+	if err != nil {
+		return hello, errors.New("Invalid JSON object")
+	}
+	return hello, nil
+}
+
+func ToJSON(hello Hello) ([]byte, error) {
+	bytes, err := json.Marshal(hello)
+	if err != nil {
+		return nil, errors.New("Invalid Hello object")
+	}
+	return bytes, nil
+}
+
 //==============================================================================================================================
 //	Init Function - Called when the user deploys the chaincode
 //==============================================================================================================================
@@ -42,6 +63,25 @@ func (t *SimpleChaincode) getString(stub *shim.ChaincodeStub, name string) ([]by
 	//var v Hello
 
 	bytes, err := stub.GetState("STRING:" + name)
+
+	if err != nil {
+		fmt.Printf("Hello: Failed to invoke vehicle_code: %s", err)
+		return nil, errors.New("Hello: Error retrieving vehicle with name = " + name)
+	}
+
+	return bytes, nil
+}
+
+//==============================================================================================================================
+//	 retrieve_v5c - Gets the state of the data at v5cID in the ledger then converts it from the stored
+//					JSON into the Vehicle struct for use in the contract. Returns the Vehcile struct.
+//					Returns empty v if it errors.
+//==============================================================================================================================
+func (t *SimpleChaincode) getJSON(stub *shim.ChaincodeStub, name string) ([]byte, error) {
+
+	//var v Hello
+
+	bytes, err := stub.GetState("JSON:" + name)
 
 	if err != nil {
 		fmt.Printf("Hello: Failed to invoke vehicle_code: %s", err)
@@ -96,8 +136,24 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 			fmt.Printf("Incorrect number of arguments passed.")
 			return nil, errors.New("create@Invoke: Incorrect number of arguments passed.")
 		}
-		err := stub.PutState("STRING:" + args[0], []byte(args[0]))
+		err := stub.PutState("STRING:" + args[0], []byte(args[1]))
 
+		if err != nil {
+			return nil, errors.New("Error storing string record")
+		}
+		return nil, nil
+	} else if function == "putJson" {
+		if len(args) != 2 {
+			fmt.Printf("Incorrect number of arguments passed.")
+			return nil, errors.New("create@Invoke: Incorrect number of arguments passed.")
+		}
+
+		hello, err := ToHello(args[0], args[1])
+		if err != nil {
+			return nil, errors.New("Error storing string record")
+		}
+		bytes, err := ToJSON(hello)
+		err = stub.PutState("JSON:" + args[0], bytes)
 		if err != nil {
 			return nil, errors.New("Error storing string record")
 		}
@@ -117,6 +173,12 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 			return nil, err
 		}
 		return v, nil
+	} else if function == "getJson" {
+		v, err := t.getJSON(stub, args[0])
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
 	}
 	return nil, errors.New("Received unknown function invocation")
 }
@@ -125,10 +187,20 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 //	 Main - main - Starts up the chaincode
 //=================================================================================================================================
 func main() {
-	err := shim.Start(new(SimpleChaincode))
+	//err := shim.Start(new(SimpleChaincode))
+	//if err != nil {
+	//	fmt.Printf("Error starting Chaincode: %s", err)
+	//}
+
+	hello, err := ToHello("ditty", "Hello");
 	if err != nil {
-		fmt.Printf("Error starting Chaincode: %s", err)
+		fmt.Printf("Error parsing Hello: %s\n", err)
+	} else {
+		fmt.Printf("Success parsing Hello: %s|%s\n", hello.Name, hello.Greeting)
 	}
+
+	bytes, err := ToJSON(hello)
+	fmt.Printf("Success unparsing Hello: %s\n", string(bytes))
 	//var name = "ditty"
 	//var greeting = "Hello!"
 	//
