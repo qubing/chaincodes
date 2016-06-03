@@ -619,48 +619,14 @@ return nil, nil
 //	 update_model
 //=================================================================================================================================
 func (t *SimpleChaincode) update_model(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation int, new_value string) ([]byte, error) {
-
-if 		v.Status			== STATE_MANUFACTURE	&&
-v.Owner				== caller				&&
-caller_affiliation	== MANUFACTURER			&&
-v.Scrapped			== false				{
-
-v.Model = new_value
-
-} else {
-return nil, errors.New("Permission denied")
-}
-
-_, err := t.save_changes(stub, v)
-
-if err != nil { fmt.Printf("UPDATE_MODEL: Error saving changes: %s", err); return nil, errors.New("Error saving changes") }
-
-return nil, nil
-
+	return nil, nil
 }
 
 //=================================================================================================================================
 //	 scrap_vehicle
 //=================================================================================================================================
 func (t *SimpleChaincode) scrap_vehicle(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation int) ([]byte, error) {
-
-if		v.Status			== STATE_BEING_SCRAPPED	&&
-v.Owner				== caller				&&
-caller_affiliation	== SCRAP_MERCHANT		&&
-v.Scrapped			== false				{
-
-v.Scrapped = true
-
-} else {
-return nil, errors.New("Permission denied")
-}
-
-_, err := t.save_changes(stub, v)
-
-if err != nil { fmt.Printf("SCRAP_VEHICLE: Error saving changes: %s", err); return nil, errors.New("SCRAP_VEHICLError saving changes") }
-
-return nil, nil
-
+	return nil, nil
 }
 
 //=================================================================================================================================
@@ -669,28 +635,15 @@ return nil, nil
 //	 get_all
 //=================================================================================================================================
 func (t *SimpleChaincode) get_all(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation int) ([]byte, error) {
-
-bytes, err := json.Marshal(v)
-
-if err != nil { return nil, errors.New("GET_ALL: Invalid vehicle object") }
-
-if 		v.Owner				== caller		||
-caller_affiliation	== AUTHORITY	{
-
-return bytes, nil
-} else {
-return nil, errors.New("Permission Denied")
-}
-
+	return nil, errors.New("Permission Denied")
 }
 
 //=================================================================================================================================
 //	 Main - main - Starts up the chaincode
 //=================================================================================================================================
 func main() {
+	err := shim.Start(new(SimpleChaincode))
 
-err := shim.Start(new(SimpleChaincode))
-
-if err != nil { fmt.Printf("Error starting Chaincode: %s", err) }
+	if err != nil { fmt.Printf("Error starting Chaincode: %s", err) }
 }
 
