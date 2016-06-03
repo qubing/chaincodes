@@ -37,23 +37,16 @@ func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args [
 //					JSON into the Vehicle struct for use in the contract. Returns the Vehcile struct.
 //					Returns empty v if it errors.
 //==============================================================================================================================
-func (t *SimpleChaincode) retrieve(stub *shim.ChaincodeStub, name string) ([]byte, error) {
+func (t *SimpleChaincode) getString(stub *shim.ChaincodeStub, name string) ([]byte, error) {
 
 	//var v Hello
 
-	bytes, err := stub.GetState(name)
+	bytes, err := stub.GetState("STRING:" + name)
 
 	if err != nil {
 		fmt.Printf("Hello: Failed to invoke vehicle_code: %s", err)
 		return nil, errors.New("Hello: Error retrieving vehicle with name = " + name)
 	}
-	//
-	//err = json.Unmarshal(bytes, &v)
-	//
-	//if err != nil {
-	//	fmt.Printf("Hello: Corrupt vehicle record "+string(bytes)+": %s", err)
-	//	return nil, errors.New("Hello: Corrupt vehicle record" + string(bytes))
-	//}
 
 	return bytes, nil
 }
@@ -98,12 +91,16 @@ func (t *SimpleChaincode) create(stub *shim.ChaincodeStub, name string, greeting
 //		  initial arguments passed to other things for use in the called function e.g. name -> ecert
 //==============================================================================================================================
 func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-	if function == "create" {
+	if function == "putString" {
 		if len(args) != 2 {
 			fmt.Printf("Incorrect number of arguments passed.")
 			return nil, errors.New("create@Invoke: Incorrect number of arguments passed.")
 		}
-		t.create(stub, args[0], args[1])
+		err := stub.PutState("STRING:" + args[0], []byte(args[0]))
+
+		if err != nil {
+			return nil, errors.New("Error storing string record")
+		}
 		return nil, nil
 	}
 	return nil, errors.New("not valid invoke method")
@@ -114,8 +111,8 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 //  		initial arguments passed are passed on to the called function.
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-	if function == "read" {
-		v, err := t.retrieve(stub, args[0])
+	if function == "getString" {
+		v, err := t.getString(stub, args[0])
 		if err != nil {
 			return nil, err
 		}
