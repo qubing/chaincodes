@@ -16,20 +16,12 @@ type  SimpleChaincode struct {
 }
 
 //==============================================================================================================================
-//	Vehicle - Defines the structure for a car object. JSON on right tells it what JSON fields to map to
+//	Hello - Defines the structure for a car object. JSON on right tells it what JSON fields to map to
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
 //==============================================================================================================================
-type Vehicle struct {
-Make            string `json:"make"`
-Model           string `json:"model"`
-Reg             string `json:"reg"`
-VIN             int    `json:"VIN"`
-Owner           string `json:"owner"`
-Scrapped        bool   `json:"scrapped"`
-Status          int    `json:"status"`
-Colour          string `json:"colour"`
-V5cID           string `json:"v5cID"`
-LeaseContractID string `json:"leaseContractID"`
+type Hello struct {
+	Name            string `json:"name"`
+	Greeting        string `json:"greeting"`
 }
 
 //==============================================================================================================================
@@ -61,7 +53,6 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 //=================================================================================================================================
 func main() {
 	err := shim.Start(new(SimpleChaincode))
-
 	if err != nil { fmt.Printf("Error starting Chaincode: %s", err) }
 }
 
