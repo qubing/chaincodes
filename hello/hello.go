@@ -101,7 +101,7 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 	if function == "read" {
 		v, err := t.retrieve(stub, args[0])
 		if (err != nil) {
-			return nil, errors.New("no data found.")
+			return nil, err
 		}
 		return v, nil
 	}
