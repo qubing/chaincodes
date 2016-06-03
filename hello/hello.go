@@ -168,12 +168,15 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
 	if function == "getString" {
-		return []byte("Hello"), nil
-	} else if function == "getJson" {
-		hello := Hello{"ditty", "Hello!"}
-		bytes, err := ToJSON(hello)
+		bytes, err := t.getString(stub, args[0])
 		if err != nil {
-			return nil, errors.New("make Hello error.")
+			return nil, errors.New("no data found.")
+		}
+		return bytes, nil
+	} else if function == "getJson" {
+		bytes, err := t.getJSON(stub, args[0])
+		if err != nil {
+			return nil, errors.New("no data found.")
 		}
 		return bytes, nil
 	}
