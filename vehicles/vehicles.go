@@ -189,53 +189,7 @@ return true, nil
 //		  initial arguments passed to other things for use in the called function e.g. name -> ecert
 //==============================================================================================================================
 func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-
-caller, caller_affiliation, err := t.get_caller_data(stub)
-
-if err != nil { return nil, errors.New("Error retrieving caller information")}
-
-
-if function == "create_vehicle" { return t.create_vehicle(stub, caller, caller_affiliation, args[0])
-} else { 																				// If the function is not a create then there must be a car so we need to retrieve the car.
-
-argPos := 1
-
-if function == "scrap_vehicle" {																// If its a scrap vehicle then only two arguments are passed (no update value) all others have three arguments and the v5cID is expected in the last argument
-argPos = 0
-}
-
-v, err := t.retrieve_v5c(stub, args[argPos])
-
-if err != nil { fmt.Printf("INVOKE: Error retrieving v5c: %s", err); return nil, errors.New("Error retrieving v5c") }
-
-if strings.Contains(function, "update") == false           &&
-function 							!= "scrap_vehicle"    { 									// If the function is not an update or a scrappage it must be a transfer so we need to get the ecert of the recipient.
-
-ecert, err := t.get_ecert(stub, args[0]);
-
-if err != nil { return nil, err }
-
-rec_affiliation, err := t.check_affiliation(stub,string(ecert));
-
-if err != nil { return nil, err }
-
-if 		   function == "authority_to_manufacturer" { return t.authority_to_manufacturer(stub, v, caller, caller_affiliation, args[0], rec_affiliation)
-} else if  function == "manufacturer_to_private"   { return t.manufacturer_to_private(stub, v, caller, caller_affiliation, args[0], rec_affiliation)
-} else if  function == "private_to_private" 	   { return t.private_to_private(stub, v, caller, caller_affiliation, args[0], rec_affiliation)
-} else if  function == "private_to_lease_company"  { return t.private_to_lease_company(stub, v, caller, caller_affiliation, args[0], rec_affiliation)
-} else if  function == "lease_company_to_private"  { return t.lease_company_to_private(stub, v, caller, caller_affiliation, args[0], rec_affiliation)
-} else if  function == "private_to_scrap_merchant" { return t.private_to_scrap_merchant(stub, v, caller, caller_affiliation, args[0], rec_affiliation)
-}
-
-} else if function == "update_make"  	    { return t.update_make(stub, v, caller, caller_affiliation, args[0])
-} else if function == "update_model"        { return t.update_model(stub, v, caller, caller_affiliation, args[0])
-} else if function == "update_registration" { return t.update_registration(stub, v, caller, caller_affiliation, args[0])
-} else if function == "update_vin" 			{ return t.update_vin(stub, v, caller, caller_affiliation, args[0])
-} else if function == "scrap_vehicle" 		{ return t.scrap_vehicle(stub, v, caller, caller_affiliation) }
-
-return nil, errors.New("Function of that name doesn't exist.")
-
-}
+	return nil, errors.New("Error retrieving caller information")
 }
 //=================================================================================================================================
 //	Query - Called on chaincode query. Takes a function name passed and calls that function. Passes the
