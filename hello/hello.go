@@ -43,11 +43,11 @@ func (t *SimpleChaincode) retrieve(stub *shim.ChaincodeStub, v5cID string) ([]by
 
 	bytes, err := stub.GetState(v5cID)	;
 
-	if err != nil {	fmt.Printf("RETRIEVE_V5C: Failed to invoke vehicle_code: %s", err); return v, errors.New("RETRIEVE_V5C: Error retrieving vehicle with v5cID = " + v5cID) }
+	if err != nil {	fmt.Printf("RETRIEVE_V5C: Failed to invoke vehicle_code: %s", err); return nil, errors.New("RETRIEVE_V5C: Error retrieving vehicle with v5cID = " + v5cID) }
 
 	err = json.Unmarshal(bytes, &v)	;
 
-	if err != nil {	fmt.Printf("RETRIEVE_V5C: Corrupt vehicle record "+string(bytes)+": %s", err); return v, errors.New("RETRIEVE_V5C: Corrupt vehicle record"+string(bytes))	}
+	if err != nil {	fmt.Printf("RETRIEVE_V5C: Corrupt vehicle record "+string(bytes)+": %s", err); return nil, errors.New("RETRIEVE_V5C: Corrupt vehicle record"+string(bytes))	}
 
 	return bytes, nil
 }
