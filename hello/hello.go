@@ -46,7 +46,7 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 
 	if len(args) != 1 { fmt.Printf("Incorrect number of arguments passed"); return nil, errors.New("QUERY: Incorrect number of arguments passed") }
 
-	if function == "query" {
+	if function == "retrieve" {
 		return t.retrieve(stub, args[0]), nil
 	}
 	return nil, errors.New("Received unknown function invocation")
