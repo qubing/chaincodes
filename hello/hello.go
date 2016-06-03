@@ -87,11 +87,8 @@ func (t *SimpleChaincode) create(stub *shim.ChaincodeStub, name string, greeting
 func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
 	if function == "create" {
 		if len(args) != 2 { fmt.Printf("Incorrect number of arguments passed."); return nil, errors.New("create@Invoke: Incorrect number of arguments passed.") }
-		result, err := t.create(stub, args[0], args[1]);
-		if err {
-			return nil, errors.New("create failed.")
-		}
-		return result, nil
+		t.create(stub, args[0], args[1]);
+		return nil, nil
 	}
 	return nil, errors.New("not valid invoke method")
 }
