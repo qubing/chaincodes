@@ -39,7 +39,7 @@ func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args [
 //==============================================================================================================================
 func (t *SimpleChaincode) retrieve(stub *shim.ChaincodeStub, name string) ([]byte, error) {
 
-	var v Hello
+	//var v Hello
 
 	bytes, err := stub.GetState(name)
 
@@ -47,13 +47,13 @@ func (t *SimpleChaincode) retrieve(stub *shim.ChaincodeStub, name string) ([]byt
 		fmt.Printf("Hello: Failed to invoke vehicle_code: %s", err)
 		return nil, errors.New("Hello: Error retrieving vehicle with name = " + name)
 	}
-
-	err = json.Unmarshal(bytes, &v)
-
-	if err != nil {
-		fmt.Printf("Hello: Corrupt vehicle record "+string(bytes)+": %s", err)
-		return nil, errors.New("Hello: Corrupt vehicle record" + string(bytes))
-	}
+	//
+	//err = json.Unmarshal(bytes, &v)
+	//
+	//if err != nil {
+	//	fmt.Printf("Hello: Corrupt vehicle record "+string(bytes)+": %s", err)
+	//	return nil, errors.New("Hello: Corrupt vehicle record" + string(bytes))
+	//}
 
 	return bytes, nil
 }
