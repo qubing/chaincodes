@@ -15,6 +15,7 @@ import (
 //"regexp"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
+	"strings"
 )
 
 //==============================================================================================================================
@@ -213,15 +214,15 @@ return nil, nil
 //
 //return true, nil
 //}
-//
-////==============================================================================================================================
-////	 Router Functions
-////==============================================================================================================================
-////	Invoke - Called on chaincode invoke. Takes a function name passed and calls that function. Converts some
-////		  initial arguments passed to other things for use in the called function e.g. name -> ecert
-////==============================================================================================================================
-//func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-//
+
+//==============================================================================================================================
+//	 Router Functions
+//==============================================================================================================================
+//	Invoke - Called on chaincode invoke. Takes a function name passed and calls that function. Converts some
+//		  initial arguments passed to other things for use in the called function e.g. name -> ecert
+//==============================================================================================================================
+func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+
 //caller, caller_affiliation, err := t.get_caller_data(stub)
 //
 //if err != nil { return nil, errors.New("Error retrieving caller information")}
@@ -265,19 +266,19 @@ return nil, nil
 //} else if function == "update_vin" 			{ return t.update_vin(stub, v, caller, caller_affiliation, args[0])
 //} else if function == "update_colour" 		{ return t.update_colour(stub, v, caller, caller_affiliation, args[0])
 //} else if function == "scrap_vehicle" 		{ return t.scrap_vehicle(stub, v, caller, caller_affiliation) }
-//
-//return nil, errors.New("Function of that name doesn't exist.")
-//
-//}
-//}
-////=================================================================================================================================
-////	Query - Called on chaincode query. Takes a function name passed and calls that function. Passes the
-////  		initial arguments passed are passed on to the called function.
-////=================================================================================================================================
-//func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-//
-//if len(args) != 1 { fmt.Printf("Incorrect number of arguments passed"); return nil, errors.New("QUERY: Incorrect number of arguments passed") }
-//
+
+return nil, errors.New("Function of that name doesn't exist.")
+
+}
+}
+//=================================================================================================================================
+//	Query - Called on chaincode query. Takes a function name passed and calls that function. Passes the
+//  		initial arguments passed are passed on to the called function.
+//=================================================================================================================================
+func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
+
+if len(args) != 1 { fmt.Printf("Incorrect number of arguments passed"); return nil, errors.New("QUERY: Incorrect number of arguments passed") }
+
 //v, err := t.retrieve_v5c(stub, args[0])
 //if err != nil { fmt.Printf("QUERY: Error retrieving v5c: %s", err); return nil, errors.New("QUERY: Error retrieving v5c "+err.Error()) }
 //
@@ -286,8 +287,8 @@ return nil, nil
 //if function == "get_all" {
 //return t.get_all(stub, v, caller, caller_affiliation)
 //}
-//return nil, errors.New("Received unknown function invocation")
-//}
+return nil, errors.New("Received unknown function invocation")
+}
 //
 ////=================================================================================================================================
 ////	 Create Function
