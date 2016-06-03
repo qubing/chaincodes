@@ -92,12 +92,15 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 	}
 	return nil, errors.New("Error retrieving caller information")
 }
+
 //=================================================================================================================================
 //	Query - Called on chaincode query. Takes a function name passed and calls that function. Passes the
 //  		initial arguments passed are passed on to the called function.
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-	//v, err := t.retrieve(stub, args[0])
+	if function == "read" {
+		return t.retrieve(stub, args[0]), nil
+	}
 	return nil, errors.New("Received unknown function invocation")
 }
 
