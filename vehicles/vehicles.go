@@ -231,7 +231,6 @@ if 		   function == "authority_to_manufacturer" { return t.authority_to_manufact
 } else if function == "update_model"        { return t.update_model(stub, v, caller, caller_affiliation, args[0])
 } else if function == "update_registration" { return t.update_registration(stub, v, caller, caller_affiliation, args[0])
 } else if function == "update_vin" 			{ return t.update_vin(stub, v, caller, caller_affiliation, args[0])
-} else if function == "update_colour" 		{ return t.update_colour(stub, v, caller, caller_affiliation, args[0])
 } else if function == "scrap_vehicle" 		{ return t.scrap_vehicle(stub, v, caller, caller_affiliation) }
 
 return nil, errors.New("Function of that name doesn't exist.")
@@ -313,13 +312,6 @@ func (t *SimpleChaincode) update_vin(stub *shim.ChaincodeStub, v Vehicle, caller
 //	 update_registration
 //=================================================================================================================================
 func (t *SimpleChaincode) update_registration(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation int, new_value string) ([]byte, error) {
-	return nil, nil
-}
-
-//=================================================================================================================================
-//	 update_colour
-//=================================================================================================================================
-func (t *SimpleChaincode) update_colour(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation int, new_value string) ([]byte, error) {
 	return nil, nil
 }
 
