@@ -37,7 +37,7 @@ func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args [
 //					JSON into the Vehicle struct for use in the contract. Returns the Vehcile struct.
 //					Returns empty v if it errors.
 //==============================================================================================================================
-func (t *SimpleChaincode) retrieve(stub *shim.ChaincodeStub, v5cID string) (Hello, error) {
+func (t *SimpleChaincode) retrieve(stub *shim.ChaincodeStub, v5cID string) ([]byte, error) {
 
 	var v Hello
 
@@ -49,7 +49,7 @@ func (t *SimpleChaincode) retrieve(stub *shim.ChaincodeStub, v5cID string) (Hell
 
 	if err != nil {	fmt.Printf("RETRIEVE_V5C: Corrupt vehicle record "+string(bytes)+": %s", err); return v, errors.New("RETRIEVE_V5C: Corrupt vehicle record"+string(bytes))	}
 
-	return v, nil
+	return bytes, nil
 }
 
 //=================================================================================================================================
@@ -99,7 +99,11 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
 	if function == "read" {
-		return nil, nil //t.retrieve(stub, args[0]), nil
+		v, err := t.retrieve(stub, args[0])
+		if (err) {
+			return nil, errors.New("no data found.")
+		}
+		return v, nil
 	}
 	return nil, errors.New("Received unknown function invocation")
 }
