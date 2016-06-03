@@ -184,37 +184,8 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 //	 Main - main - Starts up the chaincode
 //=================================================================================================================================
 func main() {
-	//err := shim.Start(new(SimpleChaincode))
-	//if err != nil {
-	//	fmt.Printf("Error starting Chaincode: %s", err)
-	//}
-
-	hello, err := ToHello("ditty", "Hello");
+	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
-		fmt.Printf("Error parsing Hello: %s\n", err)
-	} else {
-		fmt.Printf("Success parsing Hello: %s|%s\n", hello.Name, hello.Greeting)
+		fmt.Printf("Error starting Chaincode: %s", err)
 	}
-
-	bytes, err := ToJSON(hello)
-	fmt.Printf("Success unparsing Hello: %s\n", string(bytes))
-	//var name = "ditty"
-	//var greeting = "Hello!"
-	//
-	//name_json := "\"name\":\"" + name + "\", "
-	//greeting_json := "\"greeting\":\"" + greeting + "\""
-	//
-	//_json := "{" + name_json + greeting_json + "}"
-	//fmt.Printf("%s\n", _json)
-	//
-	//var hello Hello
-	//err := json.Unmarshal([]byte(_json), &hello)
-	//if err != nil {
-	//	fmt.Println("Invalid JSON object: %s", err)
-	//}
-	//bytes, err := json.Marshal(hello)
-	//if err != nil {
-	//	fmt.Printf("SAVE_CHANGES: Error converting vehicle record: %s", err)
-	//}
-	//fmt.Printf("%v\n", bytes)
 }
