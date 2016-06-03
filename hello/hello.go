@@ -37,17 +37,17 @@ func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args [
 //					JSON into the Vehicle struct for use in the contract. Returns the Vehcile struct.
 //					Returns empty v if it errors.
 //==============================================================================================================================
-func (t *SimpleChaincode) retrieve(stub *shim.ChaincodeStub, v5cID string) ([]byte, error) {
+func (t *SimpleChaincode) retrieve(stub *shim.ChaincodeStub, name string) ([]byte, error) {
 
 	var v Hello
 
-	bytes, err := stub.GetState(v5cID)	;
+	bytes, err := stub.GetState(name)	;
 
-	if err != nil {	fmt.Printf("RETRIEVE_V5C: Failed to invoke vehicle_code: %s", err); return nil, errors.New("RETRIEVE_V5C: Error retrieving vehicle with v5cID = " + v5cID) }
+	if err != nil {	fmt.Printf("Hello: Failed to invoke vehicle_code: %s", err); return nil, errors.New("Hello: Error retrieving vehicle with name = " + name) }
 
 	err = json.Unmarshal(bytes, &v)	;
 
-	if err != nil {	fmt.Printf("RETRIEVE_V5C: Corrupt vehicle record "+string(bytes)+": %s", err); return nil, errors.New("RETRIEVE_V5C: Corrupt vehicle record"+string(bytes))	}
+	if err != nil {	fmt.Printf("Hello: Corrupt vehicle record "+string(bytes)+": %s", err); return nil, errors.New("Hello: Corrupt vehicle record"+string(bytes))	}
 
 	return bytes, nil
 }
