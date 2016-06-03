@@ -99,7 +99,7 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
 	if function == "read" {
-		return t.retrieve(stub, args[0]), nil
+		return nil, nil //t.retrieve(stub, args[0]), nil
 	}
 	return nil, errors.New("Received unknown function invocation")
 }
