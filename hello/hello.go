@@ -141,7 +141,7 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 		if err != nil {
 			return nil, errors.New("Error storing string record")
 		}
-		return nil, nil
+		return []byte("STRING:" + args[0]+"|"+string([]byte(args[1]))), nil
 	} else if function == "putJson" {
 		if len(args) != 2 {
 			fmt.Printf("Incorrect number of arguments passed.")
@@ -157,7 +157,7 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 		if err != nil {
 			return nil, errors.New("Error storing string record")
 		}
-		return nil, nil
+		return []byte("JSON:" + args[0]+"|"+string(bytes)), nil
 	}
 	return nil, errors.New("not valid invoke method")
 }
