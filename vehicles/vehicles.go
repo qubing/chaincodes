@@ -9,9 +9,7 @@ import (
 "encoding/json"
 "crypto/x509"
 "encoding/pem"
-"net/http"
 "net/url"
-"io/ioutil"
 
 )
 
@@ -73,16 +71,7 @@ OK string `json:"OK"`
 //	Init Function - Called when the user deploys the chaincode
 //==============================================================================================================================
 func (t *SimpleChaincode) Init(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-
-//Args
-//				0
-//			peer_address
-
-
-err := stub.PutState("Peer_Address", []byte(args[0]))
-if err != nil { return nil, errors.New("Error storing peer address") }
-
-return nil, nil
+	return nil, nil
 }
 
 //==============================================================================================================================
@@ -92,26 +81,7 @@ return nil, nil
 //				 for that user. Returns the ecert as retrived including html encoding.
 //==============================================================================================================================
 func (t *SimpleChaincode) get_ecert(stub *shim.ChaincodeStub, name string) ([]byte, error) {
-
-var cert ECertResponse
-
-peer_address, err := stub.GetState("Peer_Address")
-if err != nil { return nil, errors.New("Error retrieving peer address") }
-
-response, err := http.Get("http://"+string(peer_address)+"/registrar/"+name+"/ecert") 	// Calls out to the HyperLedger REST API to get the ecert of the user with that name
-
-if err != nil { return nil, errors.New("Error calling ecert API") }
-
-defer response.Body.Close()
-contents, err := ioutil.ReadAll(response.Body)					// Read the response from the http callout into the variable contents
-
-if err != nil { return nil, errors.New("Could not read body") }
-
-err = json.Unmarshal(contents, &cert)
-
-if err != nil { return nil, errors.New("Could not retrieve ecert for user: "+name) }
-
-return []byte(string(cert.OK)), nil
+	return nil, errors.New("Error retrieving peer address")
 }
 
 //==============================================================================================================================
@@ -273,18 +243,7 @@ return nil, errors.New("Function of that name doesn't exist.")
 //  		initial arguments passed are passed on to the called function.
 //=================================================================================================================================
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
-
-if len(args) != 1 { fmt.Printf("Incorrect number of arguments passed"); return nil, errors.New("QUERY: Incorrect number of arguments passed") }
-
-v, err := t.retrieve_v5c(stub, args[0])
-if err != nil { fmt.Printf("QUERY: Error retrieving v5c: %s", err); return nil, errors.New("QUERY: Error retrieving v5c "+err.Error()) }
-
-caller, caller_affiliation, err := t.get_caller_data(stub)
-
-if function == "get_all" {
-return t.get_all(stub, v, caller, caller_affiliation)
-}
-return nil, errors.New("Received unknown function invocation")
+	return nil, errors.New("Received unknown function invocation")
 }
 
 //=================================================================================================================================
@@ -383,15 +342,6 @@ func (t *SimpleChaincode) update_model(stub *shim.ChaincodeStub, v Vehicle, call
 //=================================================================================================================================
 func (t *SimpleChaincode) scrap_vehicle(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation int) ([]byte, error) {
 	return nil, nil
-}
-
-//=================================================================================================================================
-//	 Read Functions
-//=================================================================================================================================
-//	 get_all
-//=================================================================================================================================
-func (t *SimpleChaincode) get_all(stub *shim.ChaincodeStub, v Vehicle, caller string, caller_affiliation int) ([]byte, error) {
-	return nil, errors.New("Permission Denied")
 }
 
 //=================================================================================================================================
