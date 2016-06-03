@@ -1,10 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
-	"encoding/json"
 )
 
 //==============================================================================================================================
@@ -13,7 +13,7 @@ import (
 //	Chaincode - A blank struct for use with Shim (A HyperLedger included go file used for get/put state
 //				and other HyperLedger functions)
 //==============================================================================================================================
-type  SimpleChaincode struct {
+type SimpleChaincode struct {
 }
 
 //==============================================================================================================================
@@ -21,8 +21,8 @@ type  SimpleChaincode struct {
 //			  that element when reading a JSON object into the struct e.g. JSON make -> Struct Make.
 //==============================================================================================================================
 type Hello struct {
-	Name            string `json:"name"`
-	Greeting        string `json:"greeting"`
+	Name     string `json:"name"`
+	Greeting string `json:"greeting"`
 }
 
 //==============================================================================================================================
@@ -41,13 +41,19 @@ func (t *SimpleChaincode) retrieve(stub *shim.ChaincodeStub, name string) ([]byt
 
 	var v Hello
 
-	bytes, err := stub.GetState(name)	;
+	bytes, err := stub.GetState(name)
 
-	if err != nil {	fmt.Printf("Hello: Failed to invoke vehicle_code: %s", err); return nil, errors.New("Hello: Error retrieving vehicle with name = " + name) }
+	if err != nil {
+		fmt.Printf("Hello: Failed to invoke vehicle_code: %s", err)
+		return nil, errors.New("Hello: Error retrieving vehicle with name = " + name)
+	}
 
-	err = json.Unmarshal(bytes, &v)	;
+	err = json.Unmarshal(bytes, &v)
 
-	if err != nil {	fmt.Printf("Hello: Corrupt vehicle record "+string(bytes)+": %s", err); return nil, errors.New("Hello: Corrupt vehicle record"+string(bytes))	}
+	if err != nil {
+		fmt.Printf("Hello: Corrupt vehicle record "+string(bytes)+": %s", err)
+		return nil, errors.New("Hello: Corrupt vehicle record" + string(bytes))
+	}
 
 	return bytes, nil
 }
@@ -59,21 +65,28 @@ func (t *SimpleChaincode) create(stub *shim.ChaincodeStub, name string, greeting
 	var hello Hello
 
 	// Variables to define the JSON
-	name_json         := "\"name\":\""+name+"\", "
-	greeting_json     := "\"greeting\":"+greeting
+	name_json := "\"name\":\"" + name + "\", "
+	greeting_json := "\"greeting\":\"" + greeting + "\""
 
 	_json := "{" + name_json + greeting_json + "}"
 
 	err := json.Unmarshal([]byte(_json), &hello)
-	if err != nil { return false, errors.New("Invalid JSON object") }
+	if err != nil {
+		return false, errors.New("Invalid JSON object")
+	}
 
 	bytes, err := json.Marshal(hello)
-	if err != nil { fmt.Printf("SAVE_CHANGES: Error converting vehicle record: %s", err); return false, errors.New("Error converting vehicle record") }
+	if err != nil {
+		fmt.Printf("SAVE_CHANGES: Error converting vehicle record: %s", err)
+		return false, errors.New("Error converting vehicle record")
+	}
 
 	err = stub.PutState(hello.Name, bytes)
 
-	if err != nil { fmt.Printf("SAVE_CHANGES: Error storing vehicle record: %s", err); return false, errors.New("Error storing vehicle record") }
-
+	if err != nil {
+		fmt.Printf("SAVE_CHANGES: Error storing vehicle record: %s", err)
+		return false, errors.New("Error storing vehicle record")
+	}
 
 	return true, nil
 }
@@ -86,8 +99,11 @@ func (t *SimpleChaincode) create(stub *shim.ChaincodeStub, name string, greeting
 //==============================================================================================================================
 func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
 	if function == "create" {
-		if len(args) != 2 { fmt.Printf("Incorrect number of arguments passed."); return nil, errors.New("create@Invoke: Incorrect number of arguments passed.") }
-		t.create(stub, args[0], args[1]);
+		if len(args) != 2 {
+			fmt.Printf("Incorrect number of arguments passed.")
+			return nil, errors.New("create@Invoke: Incorrect number of arguments passed.")
+		}
+		t.create(stub, args[0], args[1])
 		return nil, nil
 	}
 	return nil, errors.New("not valid invoke method")
@@ -100,7 +116,7 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args []string) ([]byte, error) {
 	if function == "read" {
 		v, err := t.retrieve(stub, args[0])
-		if (err != nil) {
+		if err != nil {
 			return nil, err
 		}
 		return v, nil
@@ -113,6 +129,26 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 //=================================================================================================================================
 func main() {
 	err := shim.Start(new(SimpleChaincode))
-	if err != nil { fmt.Printf("Error starting Chaincode: %s", err) }
+	if err != nil {
+		fmt.Printf("Error starting Chaincode: %s", err)
+	}
+	//var name = "ditty"
+	//var greeting = "Hello!"
+	//
+	//name_json := "\"name\":\"" + name + "\", "
+	//greeting_json := "\"greeting\":\"" + greeting + "\""
+	//
+	//_json := "{" + name_json + greeting_json + "}"
+	//fmt.Printf("%s\n", _json)
+	//
+	//var hello Hello
+	//err := json.Unmarshal([]byte(_json), &hello)
+	//if err != nil {
+	//	fmt.Println("Invalid JSON object: %s", err)
+	//}
+	//bytes, err := json.Marshal(hello)
+	//if err != nil {
+	//	fmt.Printf("SAVE_CHANGES: Error converting vehicle record: %s", err)
+	//}
+	//fmt.Printf("%v\n", bytes)
 }
-
