@@ -81,7 +81,7 @@ func (t *SimpleChaincode) inputBill(stub *shim.ChaincodeStub, args []string) ([]
 		return nil, errors.New("Parameter count is not correct.")
 	}
 
-	var bills map[string] map[string] model.Bill
+	var bills map[string] map[string] *model.Bill
 	bytes, err := stub.GetState(KEY_BILLS)
 	if err != nil {
 		bytes = []byte("{}")
@@ -91,7 +91,7 @@ func (t *SimpleChaincode) inputBill(stub *shim.ChaincodeStub, args []string) ([]
 	}
 	err = json.Unmarshal(bytes, &bills)
 	if err != nil {
-		bills = make(map[string]map[string]model.Bill)
+		bills = make(map[string]map[string] *model.Bill)
 		fmt.Println("current bills:\n Unmarshalling failed. ")
 	} else {
 		fmt.Println("current bills: \n Unmarshalling failed. ")
@@ -100,7 +100,7 @@ func (t *SimpleChaincode) inputBill(stub *shim.ChaincodeStub, args []string) ([]
 	bill := model.NewBill(args)
 	//机构编码
 	bills[args[0]] = make(map[string] *model.Bill)
-	bills[args[0]][bill.No] = *bill
+	bills[args[0]][bill.No] = bill
 	bytes, err = json.Marshal(bills)
 	if err != nil {
 		fmt.Println("Bill JSON marshalling failed. ")
