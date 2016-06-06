@@ -99,6 +99,7 @@ func (t *SimpleChaincode) inputBill(stub *shim.ChaincodeStub, args []string) ([]
 
 	bill := model.NewBill(args)
 	//机构编码
+	bills[args[0]] = make(map[string] *model.Bill)
 	bills[args[0]][bill.No] = *bill
 	bytes, err = json.Marshal(bills)
 	if err != nil {
@@ -183,7 +184,15 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
  	if err != nil {
  		fmt.Printf("Error starting Chaincode: %s", err)
  	}
+
+	 //args := []string{"P1", "00001", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q"}
+	 //var bills = make(map[string] map[string] *model.Bill)
+	 //bill := model.NewBill(args)
+	 //bills[args[0]] = make(map[string] *model.Bill)
+	 //bills[args[0]][bill.No] = bill
+	 //fmt.Println(bill.ToJSON())
  }
+
 //func main() {
 //	//trade := newTrade("0000000001", "user01")
 //	//fmt.Println(trade.toJSON())
