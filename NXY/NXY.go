@@ -222,16 +222,16 @@ func (t *SimpleChaincode) inputBill(stub *shim.ChaincodeStub, args []string) ([]
 	bytes, err := stub.GetState(KEY_BILLS)
 	if err != nil {
 		bytes = []byte("{}")
-		fmt.Println("current bills:\n{}\n")
+		fmt.Println("current bills:\n{}")
 	} else {
 		fmt.Printf("current bills:\n%s\n", string(bytes))
 	}
 	err = json.Unmarshal(bytes, &bills)
 	if err != nil {
 		bills = make(map[string]map[string]Bill)
-		fmt.Println("current bills:\n Unmarshalling failed. \n")
+		fmt.Println("current bills:\n Unmarshalling failed. ")
 	} else {
-		fmt.Println("current bills: \n Unmarshalling failed. \n")
+		fmt.Println("current bills: \n Unmarshalling failed. ")
 	}
 
 	bill := newBill(args)
@@ -239,7 +239,7 @@ func (t *SimpleChaincode) inputBill(stub *shim.ChaincodeStub, args []string) ([]
 	bills[args[0]][bill.No] = *bill
 	bytes, err = json.Marshal(bills)
 	if err != nil {
-		fmt.Println("Bill JSON marshalling failed. \n")
+		fmt.Println("Bill JSON marshalling failed. ")
 		return nil, errors.New("Bill JSON marshalling failed.")
 	}
 	stub.PutState(KEY_BILLS, bytes)
@@ -272,25 +272,26 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 }
 
 func (t *SimpleChaincode) viewBill(stub *shim.ChaincodeStub, party string, no string) ([]byte, error) {
-	var bills map[string] map[string] Bill
-	bytes, err := stub.GetState(KEY_BILLS)
-	if err != nil {
-		bytes = []byte("{}")
-	}
-	if bytes != nil {
-		fmt.Printf("current bills:\n %s \n", string(bytes))
-	}
-	err = json.Unmarshal(bytes, &bills)
-	if err != nil {
-		bills = make(map[string]map[string]Bill)
-	}
-
-	bytes, err = json.Marshal(bills[party][no])
-	if err != nil {
-		fmt.Println("Bill not found.")
-		return nil, errors.New("Bill JSON marshalling failed.")
-	}
-	fmt.Printf("view bill:\n %s \n", string(bytes))
+	// var bills map[string] map[string] Bill
+	// bytes, err := stub.GetState(KEY_BILLS)
+	// if err != nil {
+	// 	bytes = []byte("{}")
+	// }
+	// if bytes != nil {
+	// 	fmt.Printf("current bills:\n %s \n", string(bytes))
+	// }
+	// err = json.Unmarshal(bytes, &bills)
+	// if err != nil {
+	// 	bills = make(map[string]map[string]Bill)
+	// }
+	//
+	// bytes, err = json.Marshal(bills[party][no])
+	// if err != nil {
+	// 	fmt.Println("Bill not found.")
+	// 	return nil, errors.New("Bill JSON marshalling failed.")
+	// }
+	// fmt.Printf("view bill:\n %s \n", string(bytes))
+	bytes := []byte("{}")
 	return bytes, nil
 }
 
