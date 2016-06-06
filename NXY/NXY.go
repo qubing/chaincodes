@@ -222,10 +222,16 @@ func (t *SimpleChaincode) inputBill(stub *shim.ChaincodeStub, args []string) ([]
 	bytes, err := stub.GetState(KEY_BILLS)
 	if err != nil {
 		bytes = []byte("{}")
+		fmt.Println("current bills:\n{}\n")
+	} else {
+		fmt.Printf("current bills:\n%s\n", string(bytes))
 	}
 	err = json.Unmarshal(bytes, &bills)
 	if err != nil {
 		bills = make(map[string]map[string]Bill)
+		fmt.Println("current bills:\n Unmarshalling failed. \n")
+	} else {
+		fmt.Println("current bills: \n Unmarshalling failed. \n")
 	}
 
 	bill := newBill(args)
@@ -233,6 +239,7 @@ func (t *SimpleChaincode) inputBill(stub *shim.ChaincodeStub, args []string) ([]
 	bills[args[0]][bill.No] = *bill
 	bytes, err = json.Marshal(bills)
 	if err != nil {
+		fmt.Println("Bill JSON marshalling failed. \n")
 		return nil, errors.New("Bill JSON marshalling failed.")
 	}
 	stub.PutState(KEY_BILLS, bytes)
@@ -270,6 +277,9 @@ func (t *SimpleChaincode) viewBill(stub *shim.ChaincodeStub, party string, no st
 	if err != nil {
 		bytes = []byte("{}")
 	}
+	if bytes != nil {
+		fmt.Printf("current bills:\n %s \n", string(bytes))
+	}
 	err = json.Unmarshal(bytes, &bills)
 	if err != nil {
 		bills = make(map[string]map[string]Bill)
@@ -277,9 +287,10 @@ func (t *SimpleChaincode) viewBill(stub *shim.ChaincodeStub, party string, no st
 
 	bytes, err = json.Marshal(bills[party][no])
 	if err != nil {
+		fmt.Println("Bill not found.")
 		return nil, errors.New("Bill JSON marshalling failed.")
 	}
-
+	fmt.Printf("view bill:\n %s \n", string(bytes))
 	return bytes, nil
 }
 
