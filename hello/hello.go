@@ -155,7 +155,7 @@ func (t *SimpleChaincode) Invoke(stub *shim.ChaincodeStub, function string, args
 		bytes, err := ToJSON(hello)
 		err = stub.PutState("JSON:" + args[0], bytes)
 		if err != nil {
-			return nil, errors.New("Error storing string record")
+			return nil, errors.New("Error storing json record")
 		}
 		return []byte("JSON:" + args[0]+"|"+string(bytes)), nil
 	}
