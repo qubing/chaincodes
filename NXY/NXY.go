@@ -270,8 +270,9 @@ func (t *SimpleChaincode) viewTrades(stub *shim.ChaincodeStub, partyID string) (
 	 }
 	 var result []*model.Trade
 	 result = make([]*model.Trade, 0)
-	 for key, trade := range trades {
-		 	if key == partyID {
+	 for _, trade := range trades {
+		 	fmt.Printf("%s|%s ?= %s", trade.From, trade.To, partyID)
+		 	if trade.From == partyID || trade.To == partyID {
 					result = append(result, trade)
 			}
 	 }
