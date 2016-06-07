@@ -62,12 +62,12 @@ func (t *SimpleChaincode) inputBill(stub *shim.ChaincodeStub, args []string) ([]
 	bytes, err := stub.GetState(KEY_BILLS)
 	if err != nil {
 		bytes = []byte("{}")
-		fmt.Println("current bills:\n{}")
+		fmt.Println("[inputBill]current bills:\n{}")
 	}
 	err = json.Unmarshal(bytes, &bills)
 	if err != nil {
 		bills = make(map[string][]*model.Bill)
-		fmt.Println("current bills:\n Unmarshalling failed. ")
+		fmt.Println("[inputBill]current bills:\n Unmarshalling failed. ")
 	}
 
 	bill := model.NewBill(args)
@@ -76,7 +76,7 @@ func (t *SimpleChaincode) inputBill(stub *shim.ChaincodeStub, args []string) ([]
 	bills[args[0]] = append(bills[args[0]], bill)
 	bytes, err = json.Marshal(bills)
 	if err != nil {
-		fmt.Println("Bill JSON marshalling failed. ")
+		fmt.Println("[inputBill]Bill JSON marshalling failed. ")
 		return nil, errors.New("Bill JSON marshalling failed.")
 	}
 	stub.PutState(KEY_BILLS, bytes)
@@ -89,14 +89,14 @@ func (t *SimpleChaincode) inputCash(stub *shim.ChaincodeStub, partyID string, am
 	bytes, err := stub.GetState(KEY_ACCOUNTS)
 	if err != nil {
 		bytes = []byte("{}")
-		fmt.Println("current bills:\n{}")
+		fmt.Println("[inputCash]current accounts:\n{}")
 	}
 	err = json.Unmarshal(bytes, &accounts)
 	if err != nil {
 		accounts = make(map[string]*model.Account)
-		fmt.Println("current bills:\n Unmarshalling failed. ")
+		fmt.Println("[inputCash]current accounts:\n Unmarshalling failed. ")
 	} else {
-		fmt.Println("current bills: \n Unmarshalling failed. ")
+		fmt.Println("[inputCash]current accounts: \n Unmarshalling failed. ")
 	}
 
 	//机构编码
@@ -104,8 +104,8 @@ func (t *SimpleChaincode) inputCash(stub *shim.ChaincodeStub, partyID string, am
 	//{partyID, amount}
 	bytes, err = json.Marshal(accounts)
 	if err != nil {
-		fmt.Println("Bill JSON marshalling failed. ")
-		return nil, errors.New("Bill JSON marshalling failed.")
+		fmt.Println("[inputCash]Account JSON marshalling failed. ")
+		return nil, errors.New("Account JSON marshalling failed.")
 	}
 	stub.PutState(KEY_ACCOUNTS, bytes)
 
@@ -117,11 +117,11 @@ func (t *SimpleChaincode) tradeBill(stub *shim.ChaincodeStub, tradeID string, bi
 	bytes, err := stub.GetState(KEY_TRADES)
 	if err != nil {
 		bytes = []byte("{}")
-		fmt.Println("current trades:\n{}")
+		fmt.Println("[tradeBill]current trades:\n{}")
 	}
 	err = json.Unmarshal(bytes, &trades)
 	if err != nil {
-		fmt.Println("current trades:\n Unmarshalling failed. ")
+		fmt.Println("[tradeBill]current trades:\n Unmarshalling failed. ")
 	}
 
 	//机构编码
@@ -129,7 +129,7 @@ func (t *SimpleChaincode) tradeBill(stub *shim.ChaincodeStub, tradeID string, bi
 	//{partyID, amount}
 	bytes, err = json.Marshal(trades)
 	if err != nil {
-		fmt.Println("Bill JSON marshalling failed. ")
+		fmt.Println("[tradeBill]Bill JSON marshalling failed. ")
 		return nil, errors.New("Bill JSON marshalling failed.")
 	}
 	stub.PutState(KEY_ACCOUNTS, bytes)
@@ -141,7 +141,7 @@ func (t *SimpleChaincode) doSign(stub *shim.ChaincodeStub, tradeID string, step 
 	bytes, err := stub.GetState(KEY_TRADES)
 	if err != nil {
 		bytes = []byte("{}")
-		fmt.Println("current trades:\n{}")
+		fmt.Println("[doSign]current trades:\n{}")
 	}
 	var trades map[string]*model.Trade
 	err = json.Unmarshal(bytes, &trades)
@@ -210,7 +210,7 @@ func (t *SimpleChaincode) viewBill(stub *shim.ChaincodeStub, partyID string, bil
 		bytes = []byte("{}")
 	 }
 	 if bytes != nil {
-		fmt.Printf("current bills:\n %s \n", string(bytes))
+		fmt.Printf("[viewBill]current bills:\n %s \n", string(bytes))
 	 }
 	 err = json.Unmarshal(bytes, &bills)
 	 if err != nil {
@@ -220,10 +220,10 @@ func (t *SimpleChaincode) viewBill(stub *shim.ChaincodeStub, partyID string, bil
 		 if bills[partyID][i].No == billID {
 			 bytes, err = json.Marshal(bills[partyID][i])
 			 if err != nil {
-					fmt.Println("Bill not found.")
+					fmt.Println("[viewBill]Bill not found.")
 					return nil, errors.New("Bill JSON marshalling failed.")
 			 }
-			 fmt.Printf("view bill:\n %s \n", string(bytes))
+			 fmt.Printf("[viewBill]view bill:\n %s \n", string(bytes))
 			 return bytes, nil
 		 }
 	 }
@@ -237,7 +237,7 @@ func (t *SimpleChaincode) viewBills(stub *shim.ChaincodeStub, partyID string) ([
 		bytes = []byte("{}")
 	 }
 	 if bytes != nil {
-		fmt.Printf("current bills:\n %s \n", string(bytes))
+		fmt.Printf("[viewBills]current bills:\n %s \n", string(bytes))
 	 }
 	 err = json.Unmarshal(bytes, &bills)
 	 if err != nil {
@@ -247,11 +247,11 @@ func (t *SimpleChaincode) viewBills(stub *shim.ChaincodeStub, partyID string) ([
 
 	 bytes, err = json.Marshal(bills[partyID])
 	 if err != nil {
-			fmt.Println("Bill not found.")
+			fmt.Println("[viewBills]Bill not found.")
 			bytes = []byte("{}")
 			//return nil, errors.New("Bill JSON marshalling failed.")
 	 }
-	 fmt.Printf("view bill:\n %s \n", string(bytes))
+	 fmt.Printf("[viewBills]view bill:\n %s \n", string(bytes))
 	 return bytes, nil
 }
 
@@ -262,19 +262,19 @@ func (t *SimpleChaincode) viewTrades(stub *shim.ChaincodeStub, partyID string) (
 			bytes = []byte("{}")
 	 }
 	 if bytes != nil {
-			fmt.Printf("current trades:\n %s \n", string(bytes))
+			fmt.Printf("[viewTrades]current trades:\n %s \n", string(bytes))
 	 }
 	 err = json.Unmarshal(bytes, &trades)
 	 if err != nil {
 			trades = make(map[string] map[string] model.Trade)
 			trades[partyID] = make(map[string] model.Trade)
-			fmt.Println("Trades not found.")
+			fmt.Println("[viewTrades]Trades not found.")
 			return nil, errors.New("Trade JSON marshalling failed.")
 	 }
 
 	 bytes, err = json.Marshal(trades[partyID])
 	 if err != nil {
-			fmt.Println("Trades not found.")
+			fmt.Println("[viewTrades]Trades not found.")
 			return nil, errors.New("Trade JSON marshalling failed.")
 	 }
 	 fmt.Printf("view bill:\n %s \n", string(bytes))
@@ -287,20 +287,20 @@ func (t *SimpleChaincode) viewAccount(stub *shim.ChaincodeStub, partyID string) 
 			bytes = []byte("{}")
 	 }
 	 if bytes != nil {
-			fmt.Printf("current trades:\n %s \n", string(bytes))
+			fmt.Printf("[viewAccount]current trades:\n %s \n", string(bytes))
 	 }
 	 err = json.Unmarshal(bytes, &accounts)
 	 if err != nil {
-			fmt.Println("Account not found.")
+			fmt.Println("[viewAccount]Account not found.")
 			return nil, errors.New("Trade JSON marshalling failed.")
 	 }
 
 	 bytes, err = json.Marshal(accounts[partyID])
 	 if err != nil {
-			fmt.Println("Account not found.")
+			fmt.Println("[viewAccount]Account not found.")
 			return nil, errors.New("Account JSON marshalling failed.")
 	 }
-	 fmt.Printf("view Account:\n %s \n", string(bytes))
+	 fmt.Printf("[viewAccount]view Account:\n %s \n", string(bytes))
 	 return bytes, nil
 }
 //=================================================================================================================================
