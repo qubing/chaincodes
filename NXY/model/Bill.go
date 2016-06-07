@@ -8,7 +8,7 @@ import (
 //	Bill - 票据信息
 //=====================================
 type Bill struct {
-	No               string `json:"no"`
+	ID               string `json:"id"`
 	Attr             string `json:"attr"`
 	Type             string `json:"type"`
 	IssuerName       string `json:"issuer_name"`
@@ -30,7 +30,7 @@ type Bill struct {
 
 func NewBill(params []string) *Bill {
 	bill := new(Bill)
-	bill.No = params[1]
+	bill.ID = params[1]
 	bill.Attr = params[2]
 	bill.Type = params[3]
 	bill.IssuerName = params[4]

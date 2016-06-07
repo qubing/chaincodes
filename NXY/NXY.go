@@ -217,7 +217,8 @@ func (t *SimpleChaincode) viewBill(stub *shim.ChaincodeStub, partyID string, bil
 			bills = make(map[string] []*model.Bill)
 	 }
 	 for i:= 0; i < len(bills[partyID]); i++ {
-		 if bills[partyID][i].No == billID {
+		 fmt.Printf("%s ?= %s", bills[partyID][i].ID, billID)
+		 if bills[partyID][i].ID == billID {
 			 bytes, err = json.Marshal(bills[partyID][i])
 			 if err != nil {
 					fmt.Println("[viewBill]Bill not found.")
@@ -234,22 +235,17 @@ func (t *SimpleChaincode) viewBills(stub *shim.ChaincodeStub, partyID string) ([
 	 var bills map[string] map[string] model.Bill
 	 bytes, err := stub.GetState(KEY_BILLS)
 	 if err != nil {
-		bytes = []byte("{}")
+			bytes = []byte("{}")
 	 }
-	 if bytes != nil {
-		fmt.Printf("[viewBills]current bills:\n %s \n", string(bytes))
-	 }
+
 	 err = json.Unmarshal(bytes, &bills)
 	 if err != nil {
-			bills = make(map[string] map[string] model.Bill)
-			bills[partyID] = make(map[string] model.Bill)
+			return nil, errors.New("Bill not found.")
 	 }
 
 	 bytes, err = json.Marshal(bills[partyID])
 	 if err != nil {
-			fmt.Println("[viewBills]Bill not found.")
-			bytes = []byte("{}")
-			//return nil, errors.New("Bill JSON marshalling failed.")
+			return nil, errors.New("Bill JSON marshalling failed.")
 	 }
 	 fmt.Printf("[viewBills]view bill:\n %s \n", string(bytes))
 	 return bytes, nil
@@ -324,10 +320,10 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 //	 Main - main - Starts up the chaincode
 //=================================================================================================================================
  func main() {
-	err := shim.Start(new(SimpleChaincode))
-	if err != nil {
-		fmt.Printf("Error starting Chaincode: %s", err)
-	}
+	// err := shim.Start(new(SimpleChaincode))
+	// if err != nil {
+	// 	fmt.Printf("Error starting Chaincode: %s", err)
+	// }
 
 	 //args := []string{"P1", "00001", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q"}
 	 //var bills = make(map[string] map[string] *model.Bill)
@@ -335,4 +331,17 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 	 //bills[args[0]] = make(map[string] *model.Bill)
 	 //bills[args[0]][bill.No] = bill
 	 //fmt.Println(bill.ToJSON())
+	 var bills map[string] []*model.Bill
+	 s := `{"P1":[{"id":"00001","attr":"a","type":"b","issuer_name":"c","issuer_account":"d","issuer_bank":"e","custodian_name":"f","custodian_account":"g","custodian_bank":"h","face_amount":"i","acceptor_name":"j","cceptor_account":"k","cceptor_bank":"l","issue_date":"m","due_date":"n","accept_date":"o","pay_bank":"p","trans_enable":"q"}]}`
+
+	 err := json.Unmarshal([]byte(s), &bills)
+	 if err != nil {
+			//return nil, errors.New("Bill not found.")
+	 }
+
+	 bytes, err := json.Marshal(bills["P1"])
+	 if err != nil {
+			//return nil, errors.New("Bill JSON marshalling failed.")
+	 }
+	 fmt.Println(string(bytes))
  }
