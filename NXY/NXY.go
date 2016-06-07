@@ -117,7 +117,7 @@ func (t *SimpleChaincode) tradeBill(stub *shim.ChaincodeStub, tradeID string, bi
 	bytes, err := stub.GetState(KEY_TRADES)
 	if err != nil {
 		bytes = []byte("{}")
-		fmt.Println("[tradeBill]current trades:\n")
+		fmt.Println("[tradeBill]trades not yet init.")
 	}
 	err = json.Unmarshal(bytes, &trades)
 	if err != nil {
@@ -253,9 +253,10 @@ func (t *SimpleChaincode) viewBills(stub *shim.ChaincodeStub, partyID string) ([
 }
 
 func (t *SimpleChaincode) viewTrades(stub *shim.ChaincodeStub, partyID string) ([]byte, error) {
-	 var trades map[string] map[string]*model.Trade
+	 var trades map[string]*model.Trade
 	 bytes, err := stub.GetState(KEY_TRADES)
 	 if err != nil {
+		 	fmt.Println("[viewTrades] trades not yet init.")
 			bytes = []byte("{}")
 	 }
 	 if bytes != nil {
@@ -263,13 +264,21 @@ func (t *SimpleChaincode) viewTrades(stub *shim.ChaincodeStub, partyID string) (
 	 }
 	 err = json.Unmarshal(bytes, &trades)
 	 if err != nil {
-			trades = make(map[string] map[string]*model.Trade)
-			trades[partyID] = make(map[string]*model.Trade)
+			trades = make(map[string]*model.Trade)
 			fmt.Println("[viewTrades]Trades not found.")
 			return nil, errors.New("Trade JSON marshalling failed.")
 	 }
+	 var result []*model.Trade
+	 result = make([]*model.Trade, 0)
+	 for key, trade := range trades {
+		 	if key == partyID {
+					result = append(result, trade)
+			}
+	 }
 
-	 bytes, err = json.Marshal(trades[partyID])
+	 fmt.Printf("Fond Trades: %d\n", len(result))
+
+	 bytes, err = json.Marshal(result)
 	 if err != nil {
 			fmt.Println("[viewTrades]Trades not found.")
 			return nil, errors.New("Trade JSON marshalling failed.")
