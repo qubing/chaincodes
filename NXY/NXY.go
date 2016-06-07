@@ -117,11 +117,12 @@ func (t *SimpleChaincode) tradeBill(stub *shim.ChaincodeStub, tradeID string, bi
 	bytes, err := stub.GetState(KEY_TRADES)
 	if err != nil {
 		bytes = []byte("{}")
-		fmt.Println("[tradeBill]current trades:\n{}")
+		fmt.Println("[tradeBill]current trades:\n")
 	}
 	err = json.Unmarshal(bytes, &trades)
 	if err != nil {
 		fmt.Println("[tradeBill]current trades:\n Unmarshalling failed. ")
+		return nil, errors.New("Trade Unmarshalling failed.")
 	}
 
 	//机构编码
@@ -132,7 +133,7 @@ func (t *SimpleChaincode) tradeBill(stub *shim.ChaincodeStub, tradeID string, bi
 		fmt.Println("[tradeBill]Bill JSON marshalling failed. ")
 		return nil, errors.New("Bill JSON marshalling failed.")
 	}
-	stub.PutState(KEY_ACCOUNTS, bytes)
+	stub.PutState(KEY_TRADES, bytes)
 
 	return nil, nil
 }
@@ -232,7 +233,7 @@ func (t *SimpleChaincode) viewBill(stub *shim.ChaincodeStub, partyID string, bil
 }
 
 func (t *SimpleChaincode) viewBills(stub *shim.ChaincodeStub, partyID string) ([]byte, error) {
-	 var bills map[string] map[string] model.Bill
+	 var bills map[string][]*model.Bill
 	 bytes, err := stub.GetState(KEY_BILLS)
 	 if err != nil {
 			bytes = []byte("{}")
@@ -252,7 +253,7 @@ func (t *SimpleChaincode) viewBills(stub *shim.ChaincodeStub, partyID string) ([
 }
 
 func (t *SimpleChaincode) viewTrades(stub *shim.ChaincodeStub, partyID string) ([]byte, error) {
-	 var trades map[string] map[string] model.Trade
+	 var trades map[string] map[string]*model.Trade
 	 bytes, err := stub.GetState(KEY_TRADES)
 	 if err != nil {
 			bytes = []byte("{}")
@@ -262,8 +263,8 @@ func (t *SimpleChaincode) viewTrades(stub *shim.ChaincodeStub, partyID string) (
 	 }
 	 err = json.Unmarshal(bytes, &trades)
 	 if err != nil {
-			trades = make(map[string] map[string] model.Trade)
-			trades[partyID] = make(map[string] model.Trade)
+			trades = make(map[string] map[string]*model.Trade)
+			trades[partyID] = make(map[string]*model.Trade)
 			fmt.Println("[viewTrades]Trades not found.")
 			return nil, errors.New("Trade JSON marshalling failed.")
 	 }
@@ -322,26 +323,6 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
  func main() {
 	 err := shim.Start(new(SimpleChaincode))
 	 if err != nil {
-	 	fmt.Printf("Error starting Chaincode: %s", err)
+	 		fmt.Printf("Error starting Chaincode: %s", err)
 	 }
-	//
-	// //args := []string{"P1", "00001", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q"}
-	// //var bills = make(map[string] map[string] *model.Bill)
-	// //bill := model.NewBill(args)
-	// //bills[args[0]] = make(map[string] *model.Bill)
-	// //bills[args[0]][bill.No] = bill
-	// //fmt.Println(bill.ToJSON())
-	// var bills map[string] []*model.Bill
-	// s := `{"P1":[{"id":"00001","attr":"a","type":"b","issuer_name":"c","issuer_account":"d","issuer_bank":"e","custodian_name":"f","custodian_account":"g","custodian_bank":"h","face_amount":"i","acceptor_name":"j","cceptor_account":"k","cceptor_bank":"l","issue_date":"m","due_date":"n","accept_date":"o","pay_bank":"p","trans_enable":"q"}]}`
-	//
-	// err := json.Unmarshal([]byte(s), &bills)
-	// if err != nil {
-	//		//return nil, errors.New("Bill not found.")
-	// }
-	//
-	// bytes, err := json.Marshal(bills["P1"])
-	// if err != nil {
-	//		//return nil, errors.New("Bill JSON marshalling failed.")
-	// }
-	// fmt.Println(string(bytes))
  }
