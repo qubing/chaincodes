@@ -112,7 +112,7 @@ func (t *SimpleChaincode) inputCash(stub *shim.ChaincodeStub, partyID string, am
 	return nil, nil
 }
 
-func (t *SimpleChaincode) tradeBill(stub *shim.ChaincodeStub, userID string, tradeID string, billID string, partyFrom string, partyTo string, price string) ([]byte, error) {
+func (t *SimpleChaincode) tradeBill(stub *shim.ChaincodeStub, tradeID string, billID string, partyFrom string, partyTo string, price string, userID string) ([]byte, error) {
 	var trades map[string]*model.Trade
 	bytes, err := stub.GetState(KEY_TRADES)
 	if err != nil {
@@ -255,7 +255,7 @@ func (t *SimpleChaincode) viewBills(stub *shim.ChaincodeStub, partyID string) ([
 	 return bytes, nil
 }
 
-func (t *SimpleChaincode) viewTrades(stub *shim.ChaincodeStub, partyID string, tradeID string) ([]byte, error) {
+func (t *SimpleChaincode) viewTrades(stub *shim.ChaincodeStub, partyID string) ([]byte, error) {
 	 var trades map[string] map[string] model.Trade
 	 bytes, err := stub.GetState(KEY_TRADES)
 	 if err != nil {
@@ -272,7 +272,7 @@ func (t *SimpleChaincode) viewTrades(stub *shim.ChaincodeStub, partyID string, t
 			return nil, errors.New("Trade JSON marshalling failed.")
 	 }
 
-	 bytes, err = json.Marshal(trades[partyID][tradeID])
+	 bytes, err = json.Marshal(trades[partyID])
 	 if err != nil {
 			fmt.Println("Trades not found.")
 			return nil, errors.New("Trade JSON marshalling failed.")
@@ -311,10 +311,10 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 	if function == "viewBill" {
 		return t.viewBill(stub, args[0], args[1])
 	} else if function == "viewTrades" {
-		return t.viewTrades(stub, args[0], args[1])
+		return t.viewTrades(stub, args[0])
 	} else if function == "viewBills" {
 		return t.viewBills(stub, args[0])
-	} else if function == "viewCashes" {
+	} else if function == "viewAccount" {
 		return t.viewAccount(stub, args[0])
 	}
 	return nil, errors.New("Received unknown function invocation")
