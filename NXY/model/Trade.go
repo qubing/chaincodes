@@ -32,12 +32,12 @@ type Trade struct {
 //  tradeID: 交易ID
 //  userID: 用户ID
 //======================================
-func NewTrade(tradeID string, userID string) *Trade {
+func NewTrade(tradeID string, partyFrom string, partyTo string, userID string) *Trade {
 	t := new(Trade)
 	t.ID = tradeID
 	t.Bills = make(map[string]TradeBill, 0)
 	t.Signs = make([]Sign, 0)
-	t.AddSign(STEP_INIT, userID)
+	t.AddSign(STEP_INIT, userID, "init")
 	return t
 }
 
@@ -45,24 +45,24 @@ func NewTrade(tradeID string, userID string) *Trade {
 //	[Trade]addBill - 加入票据
 //  params: 票据参数
 //=======================================
-func (t *Trade) AddBill(no string, price string) {
+func (t *Trade) AddBill(billID string, price string) {
 	if t.Bills == nil {
 		t.Bills = make(map[string]TradeBill, 0)
 	}
 
-	t.Bills[no] = TradeBill{no, price}
+	t.Bills[billID] = TradeBill{billID, price}
 }
 //========================================
 //	[Trade]addSign - 添加审批
 //  stepID: 审批步骤
 //  userID: 用户ID
 //========================================
-func (t *Trade) AddSign(stepID string, userID string) {
+func (t *Trade) AddSign(stepID string, userID string, comments string) {
 	if t.Signs == nil {
 		t.Signs = make([]Sign, 0)
 	}
 
-	sign := Sign{stepID, userID}
+	sign := Sign{stepID, userID, comments}
 	t.Signs = append(t.Signs, sign)
 }
 
