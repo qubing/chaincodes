@@ -320,28 +320,28 @@ func (t *SimpleChaincode) Query(stub *shim.ChaincodeStub, function string, args 
 //	 Main - main - Starts up the chaincode
 //=================================================================================================================================
  func main() {
-	// err := shim.Start(new(SimpleChaincode))
+	 err := shim.Start(new(SimpleChaincode))
+	 if err != nil {
+	 	fmt.Printf("Error starting Chaincode: %s", err)
+	 }
+	//
+	// //args := []string{"P1", "00001", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q"}
+	// //var bills = make(map[string] map[string] *model.Bill)
+	// //bill := model.NewBill(args)
+	// //bills[args[0]] = make(map[string] *model.Bill)
+	// //bills[args[0]][bill.No] = bill
+	// //fmt.Println(bill.ToJSON())
+	// var bills map[string] []*model.Bill
+	// s := `{"P1":[{"id":"00001","attr":"a","type":"b","issuer_name":"c","issuer_account":"d","issuer_bank":"e","custodian_name":"f","custodian_account":"g","custodian_bank":"h","face_amount":"i","acceptor_name":"j","cceptor_account":"k","cceptor_bank":"l","issue_date":"m","due_date":"n","accept_date":"o","pay_bank":"p","trans_enable":"q"}]}`
+	//
+	// err := json.Unmarshal([]byte(s), &bills)
 	// if err != nil {
-	// 	fmt.Printf("Error starting Chaincode: %s", err)
+	//		//return nil, errors.New("Bill not found.")
 	// }
-
-	 //args := []string{"P1", "00001", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q"}
-	 //var bills = make(map[string] map[string] *model.Bill)
-	 //bill := model.NewBill(args)
-	 //bills[args[0]] = make(map[string] *model.Bill)
-	 //bills[args[0]][bill.No] = bill
-	 //fmt.Println(bill.ToJSON())
-	 var bills map[string] []*model.Bill
-	 s := `{"P1":[{"id":"00001","attr":"a","type":"b","issuer_name":"c","issuer_account":"d","issuer_bank":"e","custodian_name":"f","custodian_account":"g","custodian_bank":"h","face_amount":"i","acceptor_name":"j","cceptor_account":"k","cceptor_bank":"l","issue_date":"m","due_date":"n","accept_date":"o","pay_bank":"p","trans_enable":"q"}]}`
-
-	 err := json.Unmarshal([]byte(s), &bills)
-	 if err != nil {
-			//return nil, errors.New("Bill not found.")
-	 }
-
-	 bytes, err := json.Marshal(bills["P1"])
-	 if err != nil {
-			//return nil, errors.New("Bill JSON marshalling failed.")
-	 }
-	 fmt.Println(string(bytes))
+	//
+	// bytes, err := json.Marshal(bills["P1"])
+	// if err != nil {
+	//		//return nil, errors.New("Bill JSON marshalling failed.")
+	// }
+	// fmt.Println(string(bytes))
  }
