@@ -1,2 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 .idea
+.DS_Store
+vendor
+go/balance_mgr/balance_mgr
+go/chaincode-api-go/chaincode-api-go
+
