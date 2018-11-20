@@ -8,7 +8,10 @@
 > fabric API samples
 
 ### Utilities
-#### 1. RSA Utility
-#### 2. AES Utility
+#### 1. common/crypto/rsa.go
+> RSA Utility
+
+#### 2. common/crypto/aes.go
+> AES Utility
 
 
