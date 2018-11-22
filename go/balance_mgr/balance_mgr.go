@@ -27,25 +27,81 @@ type BalanceManager struct {
 func (t *BalanceManager) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	fmt.Println("<BalanceMgr Init>")
 
-	// init key-pair for cryption
+	funcName, params := stub.GetFunctionAndParameters()
+	fmt.Printf("Getting deployment parameters ... function_name: %s, parameters: %v", funcName, params)
+	fmt.Println()
+
+	if funcName == "init" {
+		// Create account with balance of '0'
+		return t.doInit(stub)
+	} else if funcName == "upgrade" {
+		// Charge account with amount
+		return t.doUpgrade(stub)
+	}
+
+	return shim.Error(fmt.Sprintf(`Invalid function name for deployment. 
+		(expecting 'init' or 'upgrade', actual: '%s')`, funcName))
+}
+
+func checkCryptoKeyPairExisting(stub shim.ChaincodeStubInterface) bool {
 	pubKey, _ := stub.GetState(KEY_PUBLIC)
-	if pubKey == nil || len(pubKey) == 0 {
-		fmt.Println("Initializing RSA key-pair ...")
+	privKey, _ := stub.GetState(KEY_PRIVATE)
+	return (pubKey != nil && len(pubKey) > 0) && (privKey != nil && len(privKey) > 0)
+}
+
+func (t *BalanceManager) doInit(stub shim.ChaincodeStubInterface) pb.Response {
+	_, params := stub.GetFunctionAndParameters()
+	paramCount := len(params)
+	if paramCount != 0 && paramCount != 2 {
+		return shim.Error(fmt.Sprintf(`Incorrect number of arguments. 
+			(expecting: 0 or 2, actual: %d)`, paramCount))
+	}
+
+	// check cryption key-pair existing
+	if checkCryptoKeyPairExisting(stub) == false {
+		if paramCount == 2 {
+			fmt.Println("Initializing RSA key-pair with deployment arguments ...")
+			stub.PutState(KEY_PUBLIC, []byte(params[0]))
+			stub.PutState(KEY_PRIVATE, []byte(params[1]))
+			fmt.Println("Initialize RSA key-pair for cryption successfully.")
+			return shim.Success(nil)
+		}
+
+		fmt.Println("Generating RSA key-pair ...")
 		publicKey := *bytes.NewBufferString("")
 		privateKey := *bytes.NewBufferString("")
 		err := crypto.CreateKeyPair(&publicKey, &privateKey, 256)
 		if err == nil {
 			stub.PutState(KEY_PUBLIC, publicKey.Bytes())
 			stub.PutState(KEY_PRIVATE, privateKey.Bytes())
-			fmt.Println("Initialize RSA key-pair for cryption successfully.")
+			fmt.Println("Generate RSA key-pair for cryption successfully.")
 			return shim.Success(nil)
 		}
 
 		fmt.Printf("Initialize RSA key-pair for cryption failed. cause: (%s)", err)
+		fmt.Println()
 		return shim.Error(err.Error())
 	}
 
 	fmt.Println("RSA key-pair already existing, initialization not required.")
+	return shim.Success(nil)
+}
+
+func (t *BalanceManager) doUpgrade(stub shim.ChaincodeStubInterface) pb.Response {
+	_, params := stub.GetFunctionAndParameters()
+	paramCount := len(params)
+	if paramCount != 0 && paramCount != 2 {
+		return shim.Error(fmt.Sprintf(`Incorrect number of arguments. 
+			(expecting: 0 or 2, actual: %d)`, paramCount))
+	}
+
+	if paramCount == 2 {
+		fmt.Println("Initializing RSA key-pair with deployment arguments ...")
+		stub.PutState(KEY_PUBLIC, []byte(params[0]))
+		stub.PutState(KEY_PRIVATE, []byte(params[1]))
+		fmt.Println("Initialize RSA key-pair for cryption successfully.")
+	}
+
 	return shim.Success(nil)
 }
 
@@ -111,7 +167,7 @@ func (t *BalanceManager) create(stub shim.ChaincodeStubInterface, args []string)
 		return shim.Error(err.Error())
 	}
 	fmt.Printf(`Printing current user is "%s".`, string(byts))
-
+	fmt.Println()
 	return shim.Success(nil)
 }
 
@@ -185,6 +241,7 @@ func (t *BalanceManager) transfer(stub shim.ChaincodeStubInterface, args []strin
 	valFrom = valFrom - amountTransfer
 	valTo = valTo + amountTransfer
 	fmt.Printf("valFrom = %d, valTo = %d\n", valFrom, valTo)
+	fmt.Println()
 
 	// Write the state back to the ledger
 	err = stub.PutState(accountFrom, []byte(strconv.Itoa(valFrom)))
@@ -384,5 +441,6 @@ func main() {
 	err := shim.Start(new(BalanceManager))
 	if err != nil {
 		fmt.Printf("Error starting Simple chaincode: %s", err)
+		fmt.Println()
 	}
 }
