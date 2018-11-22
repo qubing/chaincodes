@@ -1,24 +1,55 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
 	"strconv"
+
+	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
+
+	"github.com/chaincodes/common/crypto"
+)
+
+const (
+	KEY_PUBLIC  = "KEY_PUBLIC"
+	KEY_PRIVATE = "KEY_PRIVATE"
+	KEY_PREFIX  = "CRYPT_"
 )
 
 // BalanceManager Smart Contract(Chaincode) implementation
 type BalanceManager struct {
 }
 
+// Init - Initialize smart contract
 func (t *BalanceManager) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	fmt.Println("<BalanceMgr Init>")
 
+	// init key-pair for cryption
+	pubKey, _ := stub.GetState(KEY_PUBLIC)
+	if pubKey == nil || len(pubKey) == 0 {
+		fmt.Println("Initializing RSA key-pair ...")
+		publicKey := *bytes.NewBufferString("")
+		privateKey := *bytes.NewBufferString("")
+		err := crypto.CreateKeyPair(&publicKey, &privateKey, 256)
+		if err == nil {
+			stub.PutState(KEY_PUBLIC, publicKey.Bytes())
+			stub.PutState(KEY_PRIVATE, privateKey.Bytes())
+			fmt.Println("Initialize RSA key-pair for cryption successfully.")
+			return shim.Success(nil)
+		}
+
+		fmt.Printf("Initialize RSA key-pair for cryption failed. cause: (%s)", err)
+		return shim.Error(err.Error())
+	}
+
+	fmt.Println("RSA key-pair already existing, initialization not required.")
 	return shim.Success(nil)
 }
 
+// Invoke - Accessing smart contract interface
 func (t *BalanceManager) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	fmt.Println("<BalanceMgr Invoke>")
 
@@ -35,9 +66,22 @@ func (t *BalanceManager) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	} else if funcName == "query" {
 		// Query account balance
 		return t.query(stub, args)
+	} else if funcName == "get" {
+		// Get normal val
+		return t.get(stub, args)
+	} else if funcName == "put" {
+		// Put normal val
+		return t.put(stub, args)
+	} else if funcName == "getX" {
+		// Get encrypted val
+		return t.getDecryption(stub, args)
+	} else if funcName == "putX" {
+		// Put decrypted val
+		return t.putEncryption(stub, args)
 	}
 
-	return shim.Error(fmt.Sprintf(`Invalid invoke function name. Expecting "create" "transfer" "query". Actual: "%s"`, funcName))
+	return shim.Error(fmt.Sprintf(`Invalid invoke function name. Expecting 'create','transfer',
+	'query', 'get', 'getX', 'put', 'putX'. Actual: '%s'`, funcName))
 }
 
 // create: create account initialized with 0
@@ -50,7 +94,7 @@ func (t *BalanceManager) create(stub shim.ChaincodeStubInterface, args []string)
 
 	accountName := args[0]
 
-	valBytes,err := stub.GetState(accountName)
+	valBytes, err := stub.GetState(accountName)
 	if err != nil {
 		return shim.Error("Account create failed with unknown reason.")
 	}
@@ -246,6 +290,94 @@ func (t *BalanceManager) query(stub shim.ChaincodeStubInterface, args []string) 
 	fmt.Println()
 
 	return shim.Success(Avalbytes)
+}
+
+func (t *BalanceManager) put(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+
+	key := args[0]
+	val := args[1]
+
+	err := stub.PutState(key, []byte(val))
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(nil)
+}
+
+func (t *BalanceManager) get(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	key := args[0]
+	val, err := stub.GetState(key)
+
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(val)
+}
+
+func (t *BalanceManager) putEncryption(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+
+	key := args[0]
+	val := args[1]
+	pubKey, err := stub.GetState(KEY_PUBLIC)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	helper, errs := crypto.NewRSAHelper(pubKey, nil)
+	if errs != nil && len(errs) > 0 {
+		return shim.Error(err.Error())
+	}
+	encoded, err := helper.Encrypt(val)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	err = stub.PutState(KEY_PREFIX+key, []byte(encoded))
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(nil)
+}
+
+func (t *BalanceManager) getDecryption(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	key := args[0]
+	encoded, err := stub.GetState(KEY_PREFIX + key)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	pubKey, err := stub.GetState(KEY_PUBLIC)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	privKey, err := stub.GetState(KEY_PRIVATE)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	helper, errs := crypto.NewRSAHelper(pubKey, privKey)
+	if errs != nil && len(errs) > 0 {
+		return shim.Error(errs[0].Error())
+	}
+	decoded, err := helper.Decrypt(string(encoded))
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success([]byte(decoded))
 }
 
 func main() {
