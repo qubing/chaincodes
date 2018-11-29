@@ -4,4 +4,5 @@
 vendor
 go/balance_mgr/balance_mgr
 go/chaincode-api-go/chaincode-api-go
+go/relay_adapter/relay_adapter
 

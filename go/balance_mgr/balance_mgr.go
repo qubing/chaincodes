@@ -107,9 +107,8 @@ func (t *BalanceManager) doUpgrade(stub shim.ChaincodeStubInterface) pb.Response
 
 // Invoke - Accessing smart contract interface
 func (t *BalanceManager) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	fmt.Println("<BalanceMgr Invoke>")
-
 	funcName, args := stub.GetFunctionAndParameters()
+	fmt.Printf("<BalanceMgr Invoke>: %s", funcName)
 	if funcName == "create" {
 		// Create account with balance of '0'
 		return t.create(stub, args)
@@ -128,16 +127,22 @@ func (t *BalanceManager) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	} else if funcName == "put" {
 		// Put normal val
 		return t.put(stub, args)
+	} else if funcName == "json" {
+		// Put normal val
+		return t.json(stub, args)
 	} else if funcName == "getX" {
 		// Get encrypted val
 		return t.getDecryption(stub, args)
 	} else if funcName == "putX" {
 		// Put decrypted val
 		return t.putEncryption(stub, args)
+	} else if funcName == "event" {
+		// Put decrypted val
+		return t.sendEvent(stub, args)
 	}
 
 	return shim.Error(fmt.Sprintf(`Invalid invoke function name. Expecting 'create','transfer',
-	'query', 'get', 'getX', 'put', 'putX'. Actual: '%s'`, funcName))
+	'query', 'get', 'getX', 'put', 'putX', 'json' and 'event'. Actual: '%s'`, funcName))
 }
 
 // create: create account initialized with 0
@@ -380,6 +385,38 @@ func (t *BalanceManager) get(stub shim.ChaincodeStubInterface, args []string) pb
 	return shim.Success(val)
 }
 
+func (t *BalanceManager) json(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 1 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	selector := args[0]
+	queryIt, err := stub.GetQueryResult(selector)
+
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	var buff bytes.Buffer
+	buff.WriteString("[")
+
+	for queryIt.HasNext() {
+		queryResult, err := queryIt.Next()
+		if err != nil {
+			return shim.Error(err.Error())
+		}
+
+		if buff.Len() > 1 {
+			buff.WriteString(",")
+		}
+		buff.WriteString(string(queryResult.GetValue()))
+	}
+
+	buff.WriteString("]")
+
+	return shim.Success(buff.Bytes())
+}
+
 func (t *BalanceManager) putEncryption(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	if len(args) != 2 {
 		return shim.Error("Incorrect number of arguments. Expecting 2")
@@ -435,6 +472,22 @@ func (t *BalanceManager) getDecryption(stub shim.ChaincodeStubInterface, args []
 	}
 
 	return shim.Success([]byte(decoded))
+}
+
+func (t *BalanceManager) sendEvent(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	eventName := args[0]
+	message := args[1]
+
+	err := stub.SetEvent(eventName, []byte(message))
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(nil)
 }
 
 func main() {
