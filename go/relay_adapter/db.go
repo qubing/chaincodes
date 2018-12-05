@@ -74,8 +74,8 @@ func queryTopicsByOrg(stub shim.ChaincodeStubInterface, docType DocumentType, or
 	return topics, nil
 }
 
-func queryMessagesByTopic(stub shim.ChaincodeStubInterface, docType DocumentType, topicName string) ([]*Message, error) {
-	messages := make([]*Message, 0)
+func querySessionByTopic(stub shim.ChaincodeStubInterface, docType DocumentType, topicName string) ([]*Session, error) {
+	messages := make([]*Session, 0)
 
 	selector := fmt.Sprintf(`{
 		"selector": {
@@ -104,14 +104,14 @@ func queryMessagesByTopic(stub shim.ChaincodeStubInterface, docType DocumentType
 			fmt.Println()
 			return nil, err
 		}
-		message := Message{}
+		message := Session{}
 		ParseJSON(&message, string(queryResult.GetValue()))
 		messages = append(messages, &message)
 	}
 	return messages, nil
 }
 
-func findMessage(stub shim.ChaincodeStubInterface, docType DocumentType, messageID string) (*Message, error) {
+func findSession(stub shim.ChaincodeStubInterface, docType DocumentType, messageID string) (*Session, error) {
 	selector := fmt.Sprintf(`{
 		"selector": {
 			"$and": [
@@ -132,7 +132,7 @@ func findMessage(stub shim.ChaincodeStubInterface, docType DocumentType, message
 		if err != nil {
 			return nil, err
 		}
-		message := Message{}
+		message := Session{}
 		ParseJSON(&message, string(queryResult.GetValue()))
 		return &message, nil
 	}

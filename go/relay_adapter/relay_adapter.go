@@ -59,7 +59,7 @@ func (t *RelayAdapter) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	} else if funcName == "topics" {
 		// list installed topics (IN or OUT)
 		return t.listTopics(stub, params)
-	} else if funcName == "messages" {
+	} else if funcName == "sessions" {
 		// list message (IN or OUT)
 		return t.listMessages(stub, params)
 	} else if funcName == "install" {
@@ -147,47 +147,47 @@ func (t *RelayAdapter) readMessage(stub shim.ChaincodeStubInterface, params []st
 		return shim.Error(fmt.Sprintf(`Incorrect number of arguments. (expecting 3, actual: "%d")`, len(params)))
 	}
 
-	messageType := params[0]
-	messageID := params[1]
+	sessionType := params[0]
+	sessionID := params[1]
 	orgID := params[2]
 
-	var message *Message
+	var session *Session
 	var err error
-	var topicDocType, messageDocType DocumentType
-	if messageType == string(OUT) {
-		messageDocType = DOC_MESSAGE_OUT
+	var topicDocType, sessionDocType DocumentType
+	if sessionType == string(OUT) {
+		sessionDocType = DOC_SESSION_OUT
 		topicDocType = DOC_TOPIC_OUT
-	} else if messageType == string(IN) {
-		messageDocType = DOC_MESSAGE_IN
+	} else if sessionType == string(IN) {
+		sessionDocType = DOC_SESSION_IN
 		topicDocType = DOC_TOPIC_IN
 	} else {
 		return shim.Error("message type is wrong")
 	}
 
-	message, err = findMessage(stub, messageDocType, messageID)
+	session, err = findSession(stub, sessionDocType, sessionID)
 
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	if message == nil {
-		return shim.Error(fmt.Sprintf(`message not found.(id: %s)`, messageID))
+	if session == nil {
+		return shim.Error(fmt.Sprintf(`session not found.(id: %s)`, sessionID))
 	}
 
-	topic, err := findTopic(stub, topicDocType, message.Name)
+	topic, err := findTopic(stub, topicDocType, session.Name)
 
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	decoded, err := topic.DecryptMessage(orgID, message.Body)
+	decoded, err := topic.DecryptMessage(orgID, session.Message)
 
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	message.Body = decoded
+	session.Message = decoded
 
-	bytes, err := json.Marshal(message)
+	bytes, err := json.Marshal(session)
 
 	if err != nil {
 		return shim.Error(err.Error())
@@ -201,24 +201,24 @@ func (t *RelayAdapter) listMessages(stub shim.ChaincodeStubInterface, params []s
 		return shim.Error(fmt.Sprintf(`Incorrect number of arguments. (expecting 2, actual: "%d")`, len(params)))
 	}
 
-	messageType := params[0]
+	sessionType := params[0]
 	topicName := params[1]
 
-	var messages []*Message
+	var sessions []*Session
 	var err error
-	if messageType == string(OUT) {
-		messages, err = queryMessagesByTopic(stub, DOC_MESSAGE_OUT, topicName)
-	} else if messageType == string(IN) {
-		messages, err = queryMessagesByTopic(stub, DOC_MESSAGE_IN, topicName)
+	if sessionType == string(OUT) {
+		sessions, err = querySessionByTopic(stub, DOC_SESSION_OUT, topicName)
+	} else if sessionType == string(IN) {
+		sessions, err = querySessionByTopic(stub, DOC_SESSION_IN, topicName)
 	} else {
-		return shim.Error("topic type is wrong")
+		return shim.Error("session type is wrong")
 	}
 
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	bytes, err := json.Marshal(messages)
+	bytes, err := json.Marshal(sessions)
 
 	if err != nil {
 		return shim.Error(err.Error())
@@ -356,28 +356,23 @@ func (t *RelayAdapter) send(stub shim.ChaincodeStubInterface, params []string) p
 
 	topicType := params[0]
 	messageJSON := params[1]
-	message := new(Message)
-	err := json.Unmarshal([]byte(messageJSON), &message)
+	routeJSON := params[2]
+
+	session := new(Session)
+	err := json.Unmarshal([]byte(messageJSON), &session)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	//fmt.Printf(`message:> %s`, messageJSON)
-	//data, _ := ToJSON(message)
-	//return shim.Success([]byte(data))
 
-	routeJSON := params[2]
 	route := new(Route)
 	err = json.Unmarshal([]byte(routeJSON), route)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
-	// fmt.Printf(`route:> %s`, routeJSON)
-	// data, _ := ToJSON(route)
-	// return shim.Success([]byte(data))
 
 	var topic *Topic
 	if topicType == string(OUT) {
-		topic, err = findTopic(stub, DOC_TOPIC_OUT, message.Name)
+		topic, err = findTopic(stub, DOC_TOPIC_OUT, session.Name)
 		if err != nil {
 			return shim.Error(err.Error())
 		} else if topic == nil {
@@ -385,13 +380,13 @@ func (t *RelayAdapter) send(stub shim.ChaincodeStubInterface, params []string) p
 		} else if topic.SenderExist(route.OrgID) == false {
 			return shim.Error(fmt.Sprintf(`send message(OUT) failed, cause: sender not registered.(org:%s)`, route.OrgID))
 		}
-		message.Body, err = topic.EncryptMessage(route.OrgID, message.Body)
+		session.Message, err = topic.EncryptMessage(route.OrgID, session.Message)
 		if err != nil {
 			return shim.Error(fmt.Sprintf(`send message failed, cause: %s`, err.Error()))
 		}
-		message.DocType = DOC_MESSAGE_OUT
+		session.DocType = DOC_SESSION_OUT
 	} else if topicType == string(IN) {
-		topic, err = findTopic(stub, DOC_TOPIC_IN, message.Name)
+		topic, err = findTopic(stub, DOC_TOPIC_IN, session.Name)
 
 		if err != nil {
 			return shim.Error(err.Error())
@@ -400,26 +395,26 @@ func (t *RelayAdapter) send(stub shim.ChaincodeStubInterface, params []string) p
 		} else if topic.SenderExist(route.OrgID) == false {
 			return shim.Error(fmt.Sprintf(`send message(IN) failed, cause: sender not registered.(topic:%s, org:%s)`, topic.Name, route.OrgID))
 		}
-		message.DocType = DOC_MESSAGE_IN
+		session.DocType = DOC_SESSION_IN
 	} else {
 		return shim.Error("topic type is wrong")
 	}
-	message.Id = stub.GetTxID()
+	session.Id = stub.GetTxID()
 	route.TrxID = stub.GetTxID()
-	message.Routes = append(message.Routes, route)
+	session.Histories = append(session.Histories, route)
 
 	//encryption failed.
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	data, err := ToJSON(message)
+	data, err := ToJSON(session)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 	fmt.Printf(`Putting state '%s'`, data)
 	fmt.Println()
-	err = stub.PutState(message.Id, []byte(data))
+	err = stub.PutState(session.Id, []byte(data))
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -427,7 +422,7 @@ func (t *RelayAdapter) send(stub shim.ChaincodeStubInterface, params []string) p
 	if topicType == string(OUT) {
 		//send message to event hub
 		fmt.Printf(`send message: |%s|`, data)
-		err = stub.SetEvent(message.Name, []byte(data))
+		err = stub.SetEvent(session.Name, []byte(data))
 		if err != nil {
 			return shim.Error(err.Error())
 		}

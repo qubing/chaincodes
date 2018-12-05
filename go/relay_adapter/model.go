@@ -11,9 +11,9 @@ type DocumentType string
 
 const (
 	DOC_TOPIC_IN    DocumentType = "TOPIC_IN"
-	DOC_MESSAGE_IN  DocumentType = "MESSAGE_IN"
+	DOC_SESSION_IN  DocumentType = "SESSION_IN"
 	DOC_TOPIC_OUT   DocumentType = "TOPIC_OUT"
-	DOC_MESSAGE_OUT DocumentType = "MESSAGE_OUT"
+	DOC_SESSION_OUT DocumentType = "SESSION_OUT"
 )
 
 type TopicType string
@@ -77,21 +77,25 @@ type Topic struct {
 	Readers []*Reader `json:"readers"`
 }
 
+type Orgnization struct {
+	OrgID string `json:"org_id"`
+}
+
 type Sender struct {
-	OrgID     string `json:"org_id"`
+	Orgnization
 	PublicKey string `json:"public_key"`
 }
 
 type Reader struct {
-	OrgID      string `json:"org_id"`
+	Orgnization
 	PublicKey  string `json:"public_key"`
 	PrivateKey string `json:"private_key"`
 }
 
-type Message struct {
+type Session struct {
 	AbstractDoc
-	Body   string   `json:"body"`
-	Routes []*Route `json:"routes"`
+	Message   string   `json:"message"`
+	Histories []*Route `json:"histories"`
 }
 
 type Route struct {
@@ -107,7 +111,7 @@ func (t *Topic) ParseJSON(dataJSON string) error {
 	return ParseJSON(t, dataJSON)
 }
 
-func (t *Message) ParseJSON(dataJSON string) error {
+func (t *Session) ParseJSON(dataJSON string) error {
 	return ParseJSON(t, dataJSON)
 }
 
@@ -142,24 +146,26 @@ func NewTopic(topicType DocumentType, topicName string) *Topic {
 	return &topic
 }
 
-func (t *Topic) NewMessage() *Message {
-	message := new(Message)
+func (t *Topic) NewSession() *Session {
+	session := new(Session)
 	if t.DocType == DOC_TOPIC_IN {
-		message.DocType = DOC_MESSAGE_IN
+		session.DocType = DOC_SESSION_IN
 	} else {
-		message.DocType = DOC_MESSAGE_OUT
+		session.DocType = DOC_SESSION_OUT
 	}
 
-	return message
+	return session
 }
 
 func NewSender(orgID string, publicKey string) *Sender {
-	org := Sender{OrgID: orgID, PublicKey: publicKey}
+	org := Sender{PublicKey: publicKey}
+	org.OrgID = orgID
 	return &org
 }
 
 func NewReader(orgID string, publicKey string, privateKey string) *Reader {
-	org := Reader{OrgID: orgID, PublicKey: publicKey, PrivateKey: privateKey}
+	org := Reader{PublicKey: publicKey, PrivateKey: privateKey}
+	org.OrgID = orgID
 	return &org
 }
 
@@ -180,29 +186,6 @@ func (t *Topic) GetReader(orgID string) (*Reader, error) {
 	}
 	return nil, fmt.Errorf(`reader not found. (orgID:%s)`, orgID)
 }
-
-// func (t *Topic) NewMessage(topicName, messageBody, networkID, orgID, userID, transactionID, updateTime, comment string, histories []*Route) (*Message, error) {
-// 	message := Message{}
-// 	message.DocType = "MESSAGE"
-// 	message.Name = topicName
-// 	sender, err := t.GetSender(orgID)
-// 	if err != nil {
-// 		shim.Error(err.Error())
-// 	}
-// 	helper, errs := crypto.NewRSAHelper([]byte(sender.PublicKey), nil)
-// 	if errs != nil && len(errs) > 0 {
-// 		return nil, errs[0]
-// 	}
-// 	encoded, err := helper.Encrypt(messageBody)
-// 	if err != nil {
-// 		return nil, fmt.Errorf(`message encryption failed. cause: %s`, err.Error())
-// 	}
-
-// 	message.Body = encoded
-// 	message.AddHistories(histories)
-// 	message.AddRoute(networkID, orgID, userID, transactionID, updateTime, comment)
-// 	return &message, nil
-// }
 
 func (t *Topic) EncryptMessage(orgID string, message string) (string, error) {
 	sender, err := t.GetSender(orgID)
@@ -240,17 +223,6 @@ func (t *Topic) DecryptMessage(orgID string, message string) (string, error) {
 	return decoded, nil
 }
 
-// func (t *Message) AddHistories(histories []*Route) error {
-// 	if t.Routes == nil {
-// 		t.Routes = make([]*Route, 0)
-// 	}
-
-// 	for _, history := range histories {
-// 		t.Routes = append(t.Routes, history)
-// 	}
-// 	return nil
-// }
-
 func (t *Topic) AddSender(orgID, publicKey string) {
 	sender := NewSender(orgID, publicKey)
 	t.Senders = append(t.Senders, sender)
@@ -259,19 +231,4 @@ func (t *Topic) AddSender(orgID, publicKey string) {
 func (t *Topic) AddReader(orgID, publicKey, privateKey string) {
 	reader := NewReader(orgID, publicKey, privateKey)
 	t.Readers = append(t.Readers, reader)
-}
-
-func (t *Message) AddRoute(networkID, orgID, userID, transactionID, updateTime, comment string) error {
-	route := Route{}
-	route.NetworkID = networkID
-	route.OrgID = orgID
-	route.UserID = userID
-	route.TrxID = transactionID
-	route.UpdateTime = updateTime
-	route.Comment = comment
-	if t.Routes == nil {
-		t.Routes = make([]*Route, 0)
-	}
-	t.Routes = append(t.Routes, &route)
-	return nil
 }
