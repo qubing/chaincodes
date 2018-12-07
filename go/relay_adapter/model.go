@@ -40,6 +40,7 @@ func ToJSON(dataObject JSONModel) (string, error) {
 	bytes, err := json.Marshal(dataObject)
 	if err != nil {
 		fmt.Printf("[ToJSON]%s", err.Error())
+		fmt.Println()
 		return "{}", err
 	}
 	return string(bytes), nil
@@ -50,6 +51,7 @@ func ParseJSON(dataObject JSONModel, dataJSON string) error {
 	err := json.Unmarshal([]byte(dataJSON), &dataObject)
 	if err != nil {
 		fmt.Printf("[ParseJSON]%s", err.Error())
+		fmt.Println()
 		return err
 	}
 	return nil
@@ -60,6 +62,7 @@ func ParseJSONs(dataObjects []JSONModel, dataJSON string) error {
 	err := json.Unmarshal([]byte(dataJSON), &dataObjects)
 	if err != nil {
 		fmt.Printf("[ParseJSONs]%s", err.Error())
+		fmt.Println()
 		return err
 	}
 	return nil
@@ -67,12 +70,12 @@ func ParseJSONs(dataObjects []JSONModel, dataJSON string) error {
 
 type AbstractDoc struct {
 	DocType DocumentType `json:"doc_type"`
-	Name    string       `json:"name"`
 	Id      string       `json:"id"`
 }
 
 type Topic struct {
 	AbstractDoc
+	Name    string    `json:"name"`
 	Senders []*Sender `json:"senders"`
 	Readers []*Reader `json:"readers"`
 }
@@ -88,12 +91,13 @@ type Sender struct {
 
 type Reader struct {
 	Orgnization
-	PublicKey  string `json:"public_key"`
-	PrivateKey string `json:"private_key"`
+	PublicKey   string `json:"public_key"`
+	PrivateHash string `json:"private_hash"`
 }
 
 type Session struct {
 	AbstractDoc
+	TopicName string   `json:"topic_name"`
 	Message   string   `json:"message"`
 	Histories []*Route `json:"histories"`
 }
@@ -163,8 +167,8 @@ func NewSender(orgID string, publicKey string) *Sender {
 	return &org
 }
 
-func NewReader(orgID string, publicKey string, privateKey string) *Reader {
-	org := Reader{PublicKey: publicKey, PrivateKey: privateKey}
+func NewReader(orgID string, publicKey string, privateHash string) *Reader {
+	org := Reader{PublicKey: publicKey, PrivateHash: privateHash}
 	org.OrgID = orgID
 	return &org
 }
@@ -205,13 +209,8 @@ func (t *Topic) EncryptMessage(orgID string, message string) (string, error) {
 	return encoded, nil
 }
 
-func (t *Topic) DecryptMessage(orgID string, message string) (string, error) {
-	receiver, err := t.GetReader(orgID)
-	if err != nil {
-		return "", err
-	}
-
-	helper, errs := crypto.NewRSAHelper([]byte(receiver.PublicKey), []byte(receiver.PrivateKey))
+func (t *Reader) DecryptMessage(orgID string, message string, privateKey []byte) (string, error) {
+	helper, errs := crypto.NewRSAHelper([]byte(t.PublicKey), privateKey)
 	if errs != nil && len(errs) > 0 {
 		return "", errs[0]
 	}

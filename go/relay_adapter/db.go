@@ -83,7 +83,7 @@ func querySessionByTopic(stub shim.ChaincodeStubInterface, docType DocumentType,
 				{
 					"doc_type":{"$eq":"%s"}
 				}, {
-					"name":{"$eq":"%s"}
+					"topic_name":{"$eq":"%s"}
 				}
 			]
 		}

@@ -139,6 +139,10 @@ func (t *BalanceManager) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	} else if funcName == "event" {
 		// Put decrypted val
 		return t.sendEvent(stub, args)
+	} else if funcName == "getP" {
+		return t.getPrivateData(stub, args)
+	} else if funcName == "putP" {
+		return t.putPrivateData(stub, args)
 	}
 
 	return shim.Error(fmt.Sprintf(`Invalid invoke function name. Expecting 'create','transfer',
@@ -488,6 +492,39 @@ func (t *BalanceManager) sendEvent(stub shim.ChaincodeStubInterface, args []stri
 	}
 
 	return shim.Success(nil)
+}
+
+func (t *BalanceManager) putPrivateData(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 3 {
+		return shim.Error("Incorrect number of arguments. Expecting 3")
+	}
+
+	col := args[0]
+	key := args[1]
+	val := args[2]
+
+	err := stub.PutPrivateData(col, key, []byte(val))
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(nil)
+}
+
+func (t *BalanceManager) getPrivateData(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	if len(args) != 2 {
+		return shim.Error("Incorrect number of arguments. Expecting 2")
+	}
+
+	col := args[0]
+	key := args[1]
+	val, err := stub.GetPrivateData(col, key)
+
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(val)
 }
 
 func main() {

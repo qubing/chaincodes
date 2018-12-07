@@ -1,0 +1,9 @@
+[
+    {
+         "name": "private_keys",
+         "policy": "OR('Org1MSP.member')",
+         "requiredPeerCount": 0,
+         "maxPeerCount": 1,
+         "blockToLive":0
+    }
+  ]

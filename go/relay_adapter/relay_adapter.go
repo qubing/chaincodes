@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/hyperledger/fabric/bccsp"
+	"github.com/hyperledger/fabric/bccsp/factory"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
 )
@@ -11,14 +13,23 @@ import (
 const (
 	PREFIX_TOPIC_SENDER   = "TOPIC_SEND_"
 	PREFIX_TOPIC_RECEIVER = "TOPIC_RECV_"
+	COLLECTION_PRIV_KEYS  = "private_keys"
 )
 
 // RelayAdapter - relay adapter for communication cross blockchain network
 type RelayAdapter struct {
+	bccspInst bccsp.BCCSP
 }
 
 func main() {
-	err := shim.Start(new(RelayAdapter))
+	factory.InitFactories(nil)
+	// bccspName := "PKCS11"
+	// bccsp, err := factory.GetBCCSP(bccspName)
+	// if err != nil {
+	// 	fmt.Printf("Error getting BCCSP(%s): %s", bccspName, err)
+	// 	fmt.Println()
+	// }
+	err := shim.Start(&RelayAdapter{factory.GetDefault()})
 	if err != nil {
 		fmt.Printf("Error starting RelayAdapter: %s", err)
 		fmt.Println()
@@ -58,10 +69,10 @@ func (t *RelayAdapter) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return t.findTopic(stub, params)
 	} else if funcName == "topics" {
 		// list installed topics (IN or OUT)
-		return t.listTopics(stub, params)
+		return t.listTopic(stub, params)
 	} else if funcName == "sessions" {
 		// list message (IN or OUT)
-		return t.listMessages(stub, params)
+		return t.listSession(stub, params)
 	} else if funcName == "install" {
 		// install relay topic (IN or OUT)
 		return t.install(stub, params)
@@ -111,7 +122,7 @@ func (t *RelayAdapter) findTopic(stub shim.ChaincodeStubInterface, params []stri
 	return shim.Success(bytes)
 }
 
-func (t *RelayAdapter) listTopics(stub shim.ChaincodeStubInterface, params []string) pb.Response {
+func (t *RelayAdapter) listTopic(stub shim.ChaincodeStubInterface, params []string) pb.Response {
 	if len(params) != 2 {
 		return shim.Error(fmt.Sprintf(`Incorrect number of arguments. (expecting 2, actual: "%d")`, len(params)))
 	}
@@ -161,7 +172,7 @@ func (t *RelayAdapter) readMessage(stub shim.ChaincodeStubInterface, params []st
 		sessionDocType = DOC_SESSION_IN
 		topicDocType = DOC_TOPIC_IN
 	} else {
-		return shim.Error("message type is wrong")
+		return shim.Error("read message failed. cause: message type is wrong")
 	}
 
 	session, err = findSession(stub, sessionDocType, sessionID)
@@ -171,17 +182,26 @@ func (t *RelayAdapter) readMessage(stub shim.ChaincodeStubInterface, params []st
 	}
 
 	if session == nil {
-		return shim.Error(fmt.Sprintf(`session not found.(id: %s)`, sessionID))
+		return shim.Error(fmt.Sprintf(`read message failed. cause: session not found.(id: %s)`, sessionID))
 	}
 
-	topic, err := findTopic(stub, topicDocType, session.Name)
+	topic, err := findTopic(stub, topicDocType, session.TopicName)
 
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	decoded, err := topic.DecryptMessage(orgID, session.Message)
+	reader, err := topic.GetReader(orgID)
+	if err != nil {
+		shim.Error(fmt.Sprintf(`read message failed. cause: reader not existing.(error: %s)`, err.Error()))
+	}
 
+	privateKey, err := getReaderPrivateKey(stub, reader.PrivateHash)
+	if err != nil {
+		shim.Error(fmt.Sprintf(`read message failed. cause: get private key failed.(error: %s)`, err.Error()))
+	}
+
+	decoded, err := reader.DecryptMessage(orgID, session.Message, privateKey)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -196,19 +216,19 @@ func (t *RelayAdapter) readMessage(stub shim.ChaincodeStubInterface, params []st
 	return shim.Success(bytes)
 }
 
-func (t *RelayAdapter) listMessages(stub shim.ChaincodeStubInterface, params []string) pb.Response {
+func (t *RelayAdapter) listSession(stub shim.ChaincodeStubInterface, params []string) pb.Response {
 	if len(params) != 2 {
 		return shim.Error(fmt.Sprintf(`Incorrect number of arguments. (expecting 2, actual: "%d")`, len(params)))
 	}
 
-	sessionType := params[0]
+	topicType := params[0]
 	topicName := params[1]
 
 	var sessions []*Session
 	var err error
-	if sessionType == string(OUT) {
+	if topicType == string(OUT) {
 		sessions, err = querySessionByTopic(stub, DOC_SESSION_OUT, topicName)
-	} else if sessionType == string(IN) {
+	} else if topicType == string(IN) {
 		sessions, err = querySessionByTopic(stub, DOC_SESSION_IN, topicName)
 	} else {
 		return shim.Error("session type is wrong")
@@ -325,7 +345,13 @@ func (t *RelayAdapter) register(stub shim.ChaincodeStubInterface, params []strin
 		} else if topicType == string(OUT) && topic.ReaderExist(orgID) {
 			return shim.Error(fmt.Sprintf(`topic already registered. (topic: %s ,org: %s)`, topic.Name, orgID))
 		}
-		topic.AddReader(orgID, publicKey, privateKey)
+		privateKeyHash := stub.GetTxID()
+		topic.AddReader(orgID, publicKey, privateKeyHash)
+
+		err := saveReaderPrivateKey(stub, privateKeyHash, []byte(privateKey))
+		if err != nil {
+			return shim.Error(fmt.Sprintf(`private key save failed. cause: %s`, err.Error()))
+		}
 	} else {
 		return shim.Error("register type is wrong")
 	}
@@ -372,7 +398,7 @@ func (t *RelayAdapter) send(stub shim.ChaincodeStubInterface, params []string) p
 
 	var topic *Topic
 	if topicType == string(OUT) {
-		topic, err = findTopic(stub, DOC_TOPIC_OUT, session.Name)
+		topic, err = findTopic(stub, DOC_TOPIC_OUT, session.TopicName)
 		if err != nil {
 			return shim.Error(err.Error())
 		} else if topic == nil {
@@ -386,7 +412,7 @@ func (t *RelayAdapter) send(stub shim.ChaincodeStubInterface, params []string) p
 		}
 		session.DocType = DOC_SESSION_OUT
 	} else if topicType == string(IN) {
-		topic, err = findTopic(stub, DOC_TOPIC_IN, session.Name)
+		topic, err = findTopic(stub, DOC_TOPIC_IN, session.TopicName)
 
 		if err != nil {
 			return shim.Error(err.Error())
@@ -422,11 +448,21 @@ func (t *RelayAdapter) send(stub shim.ChaincodeStubInterface, params []string) p
 	if topicType == string(OUT) {
 		//send message to event hub
 		fmt.Printf(`send message: |%s|`, data)
-		err = stub.SetEvent(session.Name, []byte(data))
+		fmt.Println()
+		err = stub.SetEvent(session.TopicName, []byte(data))
 		if err != nil {
 			return shim.Error(err.Error())
 		}
 	}
 
 	return shim.Success(nil)
+}
+
+func saveReaderPrivateKey(stub shim.ChaincodeStubInterface, privateHash string, privateKey []byte) error {
+	err := stub.PutPrivateData(COLLECTION_PRIV_KEYS, privateHash, privateKey)
+	return err
+}
+
+func getReaderPrivateKey(stub shim.ChaincodeStubInterface, privateHash string) ([]byte, error) {
+	return stub.GetPrivateData(COLLECTION_PRIV_KEYS, privateHash)
 }
