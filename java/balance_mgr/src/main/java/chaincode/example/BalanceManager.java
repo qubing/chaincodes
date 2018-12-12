@@ -82,22 +82,37 @@ public class BalanceManager extends ChaincodeBase {
             return newErrorResponse("Incorrect number of arguments. Expecting 2");
         }
         String account = args.get(0);
-        String balance = args.get(1);
+        String charge = args.get(1);
+        int chargeAmount = 0;
+        int balanceAmount = 0;
         try {
-            Integer.parseInt(balance);
+            chargeAmount = Integer.parseInt(charge);
         } catch (NumberFormatException e) {
-            throw new Exception("balance to charge not valid.");
+            throw new Exception(String.format("Error: amount to charge should be number. actual: %s", charge));
         }
 
-        stub.putStringState(account, balance);
+        String balance = stub.getStringState(account);
+
+        if (balance == null) {
+            throw new Exception(String.format("Error: account %s to charge not existing.", account));
+        }
+        try {
+            balanceAmount = Integer.parseInt(balance);
+        } catch (NumberFormatException e) {
+            throw new Exception(String.format("Error: amount to charge should be number. actual: %s", charge));
+        }
+
+        balanceAmount += chargeAmount;
+
+        stub.putStringState(account, String.valueOf(balanceAmount));
 
         return newSuccessResponse();
     }
 
     private Response _query(ChaincodeStub stub) throws Throwable {
         List<String> args = stub.getParameters();
-        if (args.size() != 2) {
-            return newErrorResponse("Incorrect number of arguments. Expecting 2");
+        if (args.size() != 1) {
+            return newErrorResponse("Incorrect number of arguments. Expecting 1");
         }
         String account = args.get(0);
 
