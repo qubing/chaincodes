@@ -1,0 +1,14 @@
+{
+  "name": "balance_mgr",
+  "version": "1.0.0",
+  "description": "chaincode example implemented by node.js",
+  "scripts": {
+    "start" : "node balance_mgr.js"
+  },
+  "engine-strict": true,
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fabric-shim": "^1.3.1"
+  }
+}
