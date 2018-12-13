@@ -6,3 +6,9 @@ go/balance_mgr/balance_mgr
 go/chaincode-api-go/chaincode-api-go
 go/relay_adapter/relay_adapter
 node/*/node_modules
+java/*/*/.gradle
+java/*/*/gradle
+java/*/*/build
+java/*/*/gradlew
+java/*/*/gradlew.bat
+java/*/*/target
