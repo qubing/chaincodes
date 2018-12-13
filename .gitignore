@@ -12,3 +12,4 @@ java/*/*/build
 java/*/*/gradlew
 java/*/*/gradlew.bat
 java/*/*/target
+*.class
