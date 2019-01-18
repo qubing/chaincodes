@@ -73,6 +73,9 @@ public class BalanceManager extends ChaincodeBase {
 
         stub.putStringState(account, initBalance);
 
+        String message = String.format("{\"account\": \"%s\", \"balance\": \"%s\"}", account, initBalance);
+        stub.setEvent("CREATE", message.getBytes());
+
         return newSuccessResponse();
     }
 
@@ -99,12 +102,16 @@ public class BalanceManager extends ChaincodeBase {
         try {
             balanceAmount = Integer.parseInt(balance);
         } catch (NumberFormatException e) {
-            throw new Exception(String.format("Error: amount to charge should be number. actual: %s", charge));
+            //throw new Exception(String.format("Error: amount of balance should be number. actual: %s", charge));
+            balanceAmount = 0;
         }
 
         balanceAmount += chargeAmount;
 
         stub.putStringState(account, String.valueOf(balanceAmount));
+
+        String message = String.format("{\"account\": \"%s\", \"balance\": \"%d\"}", account, balanceAmount);
+        stub.setEvent("CHARGE", message.getBytes());
 
         return newSuccessResponse();
     }

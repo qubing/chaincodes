@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/hyperledger/fabric/core/chaincode/lib/cid"
+	// "github.com/hyperledger/fabric/core/chaincode/lib/cid"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
-
-	"github.com/chaincodes/common/crypto"
+	//"github.com/chaincodes/common/crypto"
 )
 
 const (
@@ -43,11 +42,11 @@ func (t *BalanceManager) Init(stub shim.ChaincodeStubInterface) pb.Response {
 		(expecting 'init' or 'upgrade', actual: '%s')`, funcName))
 }
 
-func checkCryptoKeyPairExisting(stub shim.ChaincodeStubInterface) bool {
-	pubKey, _ := stub.GetState(KEY_PUBLIC)
-	privKey, _ := stub.GetState(KEY_PRIVATE)
-	return (pubKey != nil && len(pubKey) > 0) && (privKey != nil && len(privKey) > 0)
-}
+// func checkCryptoKeyPairExisting(stub shim.ChaincodeStubInterface) bool {
+// 	pubKey, _ := stub.GetState(KEY_PUBLIC)
+// 	privKey, _ := stub.GetState(KEY_PRIVATE)
+// 	return (pubKey != nil && len(pubKey) > 0) && (privKey != nil && len(privKey) > 0)
+// }
 
 func (t *BalanceManager) doInit(stub shim.ChaincodeStubInterface) pb.Response {
 	_, params := stub.GetFunctionAndParameters()
@@ -58,30 +57,30 @@ func (t *BalanceManager) doInit(stub shim.ChaincodeStubInterface) pb.Response {
 	}
 
 	// check cryption key-pair existing
-	if checkCryptoKeyPairExisting(stub) == false {
-		if paramCount == 2 {
-			fmt.Println("Initializing RSA key-pair with deployment arguments ...")
-			stub.PutState(KEY_PUBLIC, []byte(params[0]))
-			stub.PutState(KEY_PRIVATE, []byte(params[1]))
-			fmt.Println("Initialize RSA key-pair for cryption successfully.")
-			return shim.Success(nil)
-		}
+	// if checkCryptoKeyPairExisting(stub) == false {
+	// 	if paramCount == 2 {
+	// 		fmt.Println("Initializing RSA key-pair with deployment arguments ...")
+	// 		stub.PutState(KEY_PUBLIC, []byte(params[0]))
+	// 		stub.PutState(KEY_PRIVATE, []byte(params[1]))
+	// 		fmt.Println("Initialize RSA key-pair for cryption successfully.")
+	// 		return shim.Success(nil)
+	// 	}
 
-		fmt.Println("Generating RSA key-pair ...")
-		publicKey := *bytes.NewBufferString("")
-		privateKey := *bytes.NewBufferString("")
-		err := crypto.CreateKeyPair(&publicKey, &privateKey, 256)
-		if err == nil {
-			stub.PutState(KEY_PUBLIC, publicKey.Bytes())
-			stub.PutState(KEY_PRIVATE, privateKey.Bytes())
-			fmt.Println("Generate RSA key-pair for cryption successfully.")
-			return shim.Success(nil)
-		}
+	// 	fmt.Println("Generating RSA key-pair ...")
+	// 	publicKey := *bytes.NewBufferString("")
+	// 	privateKey := *bytes.NewBufferString("")
+	// 	err := crypto.CreateKeyPair(&publicKey, &privateKey, 256)
+	// 	if err == nil {
+	// 		stub.PutState(KEY_PUBLIC, publicKey.Bytes())
+	// 		stub.PutState(KEY_PRIVATE, privateKey.Bytes())
+	// 		fmt.Println("Generate RSA key-pair for cryption successfully.")
+	// 		return shim.Success(nil)
+	// 	}
 
-		fmt.Printf("Initialize RSA key-pair for cryption failed. cause: (%s)", err)
-		fmt.Println()
-		return shim.Error(err.Error())
-	}
+	// 	fmt.Printf("Initialize RSA key-pair for cryption failed. cause: (%s)", err)
+	// 	fmt.Println()
+	// 	return shim.Error(err.Error())
+	// }
 
 	fmt.Println("RSA key-pair already existing, initialization not required.")
 	return shim.Success(nil)
@@ -130,20 +129,21 @@ func (t *BalanceManager) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	} else if funcName == "json" {
 		// Put normal val
 		return t.json(stub, args)
-	} else if funcName == "getX" {
-		// Get encrypted val
-		return t.getDecryption(stub, args)
-	} else if funcName == "putX" {
-		// Put decrypted val
-		return t.putEncryption(stub, args)
 	} else if funcName == "event" {
 		// Put decrypted val
 		return t.sendEvent(stub, args)
-	} else if funcName == "getP" {
-		return t.getPrivateData(stub, args)
-	} else if funcName == "putP" {
-		return t.putPrivateData(stub, args)
 	}
+	//  else if funcName == "getP" {
+	// 	return t.getPrivateData(stub, args)
+	// } else if funcName == "putP" {
+	// 	return t.putPrivateData(stub, args)
+	// } else if funcName == "getX" {
+	// 	// Get encrypted val
+	// 	return t.getDecryption(stub, args)
+	// } else if funcName == "putX" {
+	// 	// Put decrypted val
+	// 	return t.putEncryption(stub, args)
+	// }
 
 	return shim.Error(fmt.Sprintf(`Invalid invoke function name. Expecting 'create','transfer',
 	'query', 'get', 'getX', 'put', 'putX', 'json' and 'event'. Actual: '%s'`, funcName))
@@ -301,59 +301,59 @@ func (t *BalanceManager) query(stub shim.ChaincodeStubInterface, args []string) 
 	fmt.Printf(`Printing current user is "%s".`, string(byts))
 	fmt.Println()
 
-	id, err := cid.GetID(stub)
+	// id, err := cid.GetID(stub)
 
-	if err != nil {
-		fmt.Printf(`GetID failed. Error: "%s".`, err.Error())
-	} else {
-		fmt.Printf(`GetID="%s".`, id)
-	}
-	fmt.Println()
+	// if err != nil {
+	// 	fmt.Printf(`GetID failed. Error: "%s".`, err.Error())
+	// } else {
+	// 	fmt.Printf(`GetID="%s".`, id)
+	// }
+	// fmt.Println()
 
-	mspId, err := cid.GetMSPID(stub)
-	if err != nil {
-		fmt.Printf(`GetMSPID failed. Error: "%s".`, err.Error())
-	} else {
-		fmt.Printf(`GetMSPID="%s".`, mspId)
-	}
-	fmt.Println()
+	// mspId, err := cid.GetMSPID(stub)
+	// if err != nil {
+	// 	fmt.Printf(`GetMSPID failed. Error: "%s".`, err.Error())
+	// } else {
+	// 	fmt.Printf(`GetMSPID="%s".`, mspId)
+	// }
+	// fmt.Println()
 
-	email_val, email_found, err := cid.GetAttributeValue(stub, "email")
-	if err != nil {
-		fmt.Printf(`GetAttributeValue('email') failed. Error: "%s".`, err.Error())
-	} else if !email_found {
-		fmt.Printf(`GetAttributeValue('email') not found. Value: "%s".`, email_val)
-	} else {
-		fmt.Printf(`GetAttributeValue('email') successfully. Value: "%s".`, email_val)
-	}
-	fmt.Println()
+	// email_val, email_found, err := cid.GetAttributeValue(stub, "email")
+	// if err != nil {
+	// 	fmt.Printf(`GetAttributeValue('email') failed. Error: "%s".`, err.Error())
+	// } else if !email_found {
+	// 	fmt.Printf(`GetAttributeValue('email') not found. Value: "%s".`, email_val)
+	// } else {
+	// 	fmt.Printf(`GetAttributeValue('email') successfully. Value: "%s".`, email_val)
+	// }
+	// fmt.Println()
 
-	admin_val, admin_found, err := cid.GetAttributeValue(stub, "admin")
-	if err != nil {
-		fmt.Printf(`GetAttributeValue('admin') failed. Error: "%s".`, err.Error())
-	} else if !admin_found {
-		fmt.Printf(`GetAttributeValue('admin') not found. Value: "%s".`, admin_val)
-	} else {
-		fmt.Printf(`GetAttributeValue('admin') successfully. Value: "%s".`, admin_val)
-	}
-	fmt.Println()
+	// admin_val, admin_found, err := cid.GetAttributeValue(stub, "admin")
+	// if err != nil {
+	// 	fmt.Printf(`GetAttributeValue('admin') failed. Error: "%s".`, err.Error())
+	// } else if !admin_found {
+	// 	fmt.Printf(`GetAttributeValue('admin') not found. Value: "%s".`, admin_val)
+	// } else {
+	// 	fmt.Printf(`GetAttributeValue('admin') successfully. Value: "%s".`, admin_val)
+	// }
+	// fmt.Println()
 
-	err = cid.AssertAttributeValue(stub, "admin", "true")
-	if err != nil {
-		fmt.Printf(`AssertAttributeValue('admin', 'true') failed. Error: "%s".`, err.Error())
-	} else {
-		fmt.Printf(`AssertAttributeValue('admin', 'true') successfully.`)
-	}
-	fmt.Println()
+	// err = cid.AssertAttributeValue(stub, "admin", "true")
+	// if err != nil {
+	// 	fmt.Printf(`AssertAttributeValue('admin', 'true') failed. Error: "%s".`, err.Error())
+	// } else {
+	// 	fmt.Printf(`AssertAttributeValue('admin', 'true') successfully.`)
+	// }
+	// fmt.Println()
 
-	cert, err := cid.GetX509Certificate(stub)
-	if err != nil {
-		fmt.Printf(`GetX509Certificate failed. Error: "%s".`, err.Error())
-	} else {
-		fmt.Printf(`GetX509Certificate="%s".`, cert.Raw)
-	}
+	// cert, err := cid.GetX509Certificate(stub)
+	// if err != nil {
+	// 	fmt.Printf(`GetX509Certificate failed. Error: "%s".`, err.Error())
+	// } else {
+	// 	fmt.Printf(`GetX509Certificate="%s".`, cert.Raw)
+	// }
 
-	fmt.Println()
+	// fmt.Println()
 
 	return shim.Success(Avalbytes)
 }
@@ -421,62 +421,62 @@ func (t *BalanceManager) json(stub shim.ChaincodeStubInterface, args []string) p
 	return shim.Success(buff.Bytes())
 }
 
-func (t *BalanceManager) putEncryption(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 2 {
-		return shim.Error("Incorrect number of arguments. Expecting 2")
-	}
+// func (t *BalanceManager) putEncryption(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+// 	if len(args) != 2 {
+// 		return shim.Error("Incorrect number of arguments. Expecting 2")
+// 	}
 
-	key := args[0]
-	val := args[1]
-	pubKey, err := stub.GetState(KEY_PUBLIC)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	helper, errs := crypto.NewRSAHelper(pubKey, nil)
-	if errs != nil && len(errs) > 0 {
-		return shim.Error(err.Error())
-	}
-	encoded, err := helper.Encrypt(val)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	err = stub.PutState(KEY_PREFIX+key, []byte(encoded))
-	if err != nil {
-		return shim.Error(err.Error())
-	}
+// 	key := args[0]
+// 	val := args[1]
+// 	pubKey, err := stub.GetState(KEY_PUBLIC)
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+// 	helper, errs := crypto.NewRSAHelper(pubKey, nil)
+// 	if errs != nil && len(errs) > 0 {
+// 		return shim.Error(err.Error())
+// 	}
+// 	encoded, err := helper.Encrypt(val)
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+// 	err = stub.PutState(KEY_PREFIX+key, []byte(encoded))
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
 
-	return shim.Success(nil)
-}
+// 	return shim.Success(nil)
+// }
 
-func (t *BalanceManager) getDecryption(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	if len(args) != 1 {
-		return shim.Error("Incorrect number of arguments. Expecting 1")
-	}
+// func (t *BalanceManager) getDecryption(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+// 	if len(args) != 1 {
+// 		return shim.Error("Incorrect number of arguments. Expecting 1")
+// 	}
 
-	key := args[0]
-	encoded, err := stub.GetState(KEY_PREFIX + key)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	pubKey, err := stub.GetState(KEY_PUBLIC)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	privKey, err := stub.GetState(KEY_PRIVATE)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	helper, errs := crypto.NewRSAHelper(pubKey, privKey)
-	if errs != nil && len(errs) > 0 {
-		return shim.Error(errs[0].Error())
-	}
-	decoded, err := helper.Decrypt(string(encoded))
-	if err != nil {
-		return shim.Error(err.Error())
-	}
+// 	key := args[0]
+// 	encoded, err := stub.GetState(KEY_PREFIX + key)
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+// 	pubKey, err := stub.GetState(KEY_PUBLIC)
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+// 	privKey, err := stub.GetState(KEY_PRIVATE)
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
+// 	helper, errs := crypto.NewRSAHelper(pubKey, privKey)
+// 	if errs != nil && len(errs) > 0 {
+// 		return shim.Error(errs[0].Error())
+// 	}
+// 	decoded, err := helper.Decrypt(string(encoded))
+// 	if err != nil {
+// 		return shim.Error(err.Error())
+// 	}
 
-	return shim.Success([]byte(decoded))
-}
+// 	return shim.Success([]byte(decoded))
+// }
 
 func (t *BalanceManager) sendEvent(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	if len(args) != 2 {
